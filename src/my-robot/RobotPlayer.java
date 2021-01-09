@@ -23,6 +23,10 @@ public strictfp class RobotPlayer {
 
     static int turnCount;
 
+    static final double passabilityThreshold = 0.7;
+
+    static Direction bugDirection = null;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -146,6 +150,11 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
+    /**
+     * Sets the robot's flag to its location.
+     *
+     * @throws GameActionException
+     */
     static void sendLocation() throws GameActionException
     {
         MapLocation location = rc.getLocation();
@@ -157,6 +166,12 @@ public strictfp class RobotPlayer {
         }
     }
 
+    /**
+     * Sets the robot's flag to its location and any extra information.
+     *
+     * @param extraInformation Extra information to encode in the flag
+     * @throws GameActionException
+     */
     static void sendLocation(int extraInformation) throws GameActionException
     {
         MapLocation location = rc.getLocation();
@@ -168,6 +183,12 @@ public strictfp class RobotPlayer {
         }
     }
 
+    /**
+     * Returns the location encoded in the flag.
+     *
+     * @param flag The flag to decode
+     * @return the location encoded in the flag
+     */
     static MapLocation getLocationFromFlag(int flag)
     {
         int y = flag % 128;
@@ -196,7 +217,7 @@ public strictfp class RobotPlayer {
         {
             actualLocation = alternative;
         }
-        
+
         alternative = actualLocation.translate(0, 128);
         if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation))
         {
@@ -204,5 +225,49 @@ public strictfp class RobotPlayer {
         }
 
         return actualLocation;
+    }
+
+    /**
+     * Returns the location encoded in the flag.
+     *
+     * @param target The target location that the bug is aiming for.
+     * @throws GameActionException
+     */
+    static void basicBug(MapLocation target) throws GameActionException
+    {
+        Direction d = rc.getLocation().directionTo(target);
+        
+        if (rc.getLocation().equals(target))
+        {
+            // do something else, now that you're there
+        }
+
+        else if (rc.isReady())
+        {
+            if (rc.canMove(d) && rc.sensePassability(rc.getLocation().add(d)) >= passabilityThreshold)
+            {
+                rc.move(d);
+                bugDirection = null;
+            }
+
+            else
+            {
+                if (bugDirection == null)
+                {
+                    bugDirection = d.rotateRight();
+                }
+
+                for (int i = 0; i < 8; i++)
+                {
+                    if (rc.canMove(bugDirection) && rc.sensePassability(rc.getLocation().add(bugDirection)) >= passabilityThreshold)
+                    {
+                        rc.move(bugDirection);
+                        break;
+                    }
+                    bugDirection = bugDirection.rotateRight();
+                }
+                bugDirection = bugDirection.rotateLeft();
+            }
+        }
     }
 }
