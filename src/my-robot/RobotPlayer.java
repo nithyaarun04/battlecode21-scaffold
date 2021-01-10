@@ -29,11 +29,7 @@ public strictfp class RobotPlayer {
 
     static double lowerBoundPercentage = 0.05;
 
-    static double upperBoundPercentage = 0.05;
-
-    static int lowerBound = (int) (lowerBoundPercentage*(rc.getInfluence()));
-    
-    static int upperBound = (int) (upperBoundPercentage*(rc.getInfluence()));
+    static double upperBoundPercentage = 0.35;
 
     static int currentVotes = 0;
 
@@ -106,12 +102,10 @@ public strictfp class RobotPlayer {
                 rc.buildRobot(toBuild, dir, influence);
                 break;
             }
-
-            else
-            {
-                break;
-            }
         }
+
+        int lowerBound = (int) (lowerBoundPercentage*(rc.getInfluence()));
+        int upperBound = (int) (upperBoundPercentage*(rc.getInfluence()));
 
         if (currentVotes == rc.getTeamVotes())
         {
@@ -121,7 +115,6 @@ public strictfp class RobotPlayer {
                 lowerBoundPercentage += 0.025;
                 upperBoundPercentage += 0.025;
             }
-            
         }
 
         else
