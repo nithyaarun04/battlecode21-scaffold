@@ -27,6 +27,16 @@ public strictfp class RobotPlayer {
 
     static Direction bugDirection = null;
 
+    static double lowerBoundPercentage = 0.05;
+
+    static double upperBoundPercentage = 0.05;
+
+    static int lowerBound = (int) (lowerBoundPercentage*(rc.getInfluence()));
+    
+    static int upperBound = (int) (upperBoundPercentage*(rc.getInfluence()));
+
+    static int currentVotes = 0;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -65,19 +75,72 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
-        for (Direction dir : directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
+    static void runEnlightenmentCenter() throws GameActionException 
+    {
+        double random = Math.random();
+        RobotType toBuild = null;
+        int influence = 0;
+
+        if (random < 0.4)
+        {
+            toBuild = RobotType.POLITICIAN;
+            influence = 14;
+        }
+
+        else if (random < 0.8)
+        {
+            toBuild = RobotType.SLANDERER;
+            influence = 1;
+        }
+
+        else
+        {
+            toBuild = RobotType.MUCKRAKER;
+            influence = 1;
+        }
+
+        for (Direction dir : directions)
+        {
+            if (rc.canBuildRobot(toBuild, dir, influence))
+            {
                 rc.buildRobot(toBuild, dir, influence);
-            } else {
+                break;
+            }
+
+            else
+            {
                 break;
             }
         }
-        if (rc.canBid(1))
+
+        if (currentVotes == rc.getTeamVotes())
         {
-            rc.bid(1);
+            // lost
+            if (lowerBoundPercentage+0.025 < 0.8)
+            {
+                lowerBoundPercentage += 0.025;
+                upperBoundPercentage += 0.025;
+            }
+            
+        }
+
+        else
+        {
+            // won
+            if (lowerBoundPercentage-0.005 > 0.002)
+            {
+                lowerBoundPercentage -= 0.005;
+                upperBoundPercentage -= 0.005;
+            }
+        }
+
+        currentVotes = rc.getTeamVotes();
+
+        int randomBid = (int) (Math.random()*((upperBound-lowerBound+1)+lowerBound));
+
+        if (rc.canBid(randomBid))
+        {
+            rc.bid(randomBid);
         }
     }
 
