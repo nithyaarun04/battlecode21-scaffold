@@ -44,14 +44,12 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You may rewrite this into your own control structure if you wish.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
                     case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
                     case POLITICIAN:           runPolitician();          break;
@@ -75,18 +73,19 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 500)
+        if (rc.getRoundNum() < 200)
         {
-            if (random < 0.7)
+            if (random < 0.6)
             {
                 toBuild = RobotType.POLITICIAN;
-                influence = 14;
+                influence = (int) (0.2 * (rc.getInfluence()));
             }
 
-            else if (random < 0.85)
+            else if (random < 0.9)
             {
                 toBuild = RobotType.SLANDERER;
-                influence = 1;
+                influence = (int) (0.2 * (rc.getInfluence()));
+
             }
 
             else
@@ -98,16 +97,16 @@ public strictfp class RobotPlayer {
 
         else
         {
-            if (random < 0.35)
+            if (random < 0.6)
             {
                 toBuild = RobotType.POLITICIAN;
-                influence = 14;
+                influence = (int) (0.1 * (rc.getInfluence()));
             }
 
-            else if (random < 0.7)
+            else if (random < 0.9)
             {
                 toBuild = RobotType.SLANDERER;
-                influence = 1;
+                influence = (int) (0.1 * (rc.getInfluence()));
             }
 
             else
@@ -117,11 +116,17 @@ public strictfp class RobotPlayer {
             }
         }
 
+        if (influence > 400)
+        {
+            influence = 400;
+        }
+
         for (Direction dir : directions)
         {
             if (rc.canBuildRobot(toBuild, dir, influence))
             {
                 rc.buildRobot(toBuild, dir, influence);
+                System.out.println("Built robot");
                 break;
             }
         }
@@ -236,15 +241,13 @@ public strictfp class RobotPlayer {
                 // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) 
                 {
-                    System.out.println("e x p o s e d");
                     rc.expose(robot.location);
                     return;
                 }
             }
         }
 
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        tryMove(randomDirection());
     }
 
     /**
@@ -273,7 +276,6 @@ public strictfp class RobotPlayer {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             return true;
