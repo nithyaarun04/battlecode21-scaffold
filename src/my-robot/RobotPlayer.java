@@ -131,33 +131,33 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (currentVotes == rc.getTeamVotes())
+        if (rc.getRoundNum() > 200)
         {
             // Lost or tied the previous round
-
-            if (percentage+0.025 < 0.8)
+            if (currentVotes == rc.getTeamVotes())
             {
-                percentage += 0.025;
+                if (percentage+0.025 < 0.8)
+                {
+                    percentage += 0.025;
+                }
+
+                else
+                {
+                    percentage = 0.8;
+                }
             }
 
-            else
-            {
-                percentage = 0.8;
-            }
-        }
-
-        else
-        {
             // Won the previous round
-
-            if (percentage-0.005 > 0.002)
-            {
-                percentage -= 0.005;
-            }
-
             else
             {
-                percentage = 0.002;
+                if (percentage-0.005 > 0.002)
+                {
+                    percentage -= 0.005;
+                }
+
+                else
+                {
+                    percentage = 0.002;
             }
         }
 
@@ -166,6 +166,7 @@ public strictfp class RobotPlayer {
         if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
         {
             rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
+        }
         }
     }
 
