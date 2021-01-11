@@ -126,7 +126,6 @@ public strictfp class RobotPlayer {
             if (rc.canBuildRobot(toBuild, dir, influence))
             {
                 rc.buildRobot(toBuild, dir, influence);
-                System.out.println("Built robot");
                 break;
             }
         }
@@ -158,15 +157,15 @@ public strictfp class RobotPlayer {
                 else
                 {
                     percentage = 0.002;
+                }
             }
-        }
 
-        currentVotes = rc.getTeamVotes();
+            currentVotes = rc.getTeamVotes();
 
-        if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
-        {
-            rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
-        }
+            if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
+            {
+                rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
+            }
         }
     }
 
@@ -192,41 +191,45 @@ public strictfp class RobotPlayer {
     static void runSlanderer() throws GameActionException 
     {
         Direction[] possibleDirections = new Direction[8];
-        int index = 0;
+        int index1 = 0;
 
         for (Direction dir : directions)
         {
             if (rc.canMove(dir))
             {
-                possibleDirections[index] = dir;
-                index++;
+                possibleDirections[index1] = dir;
+                index1++;
             }
         }
 
-        if (possibleDirections[0] != null)
+        Direction[] possiblePassableDirections = new Direction[8];
+        int index2 = 0;
+
+        for (Direction dir : possibleDirections)
         {
-            Direction highestPassability = possibleDirections[0];
-
-            for (Direction dir : possibleDirections)
+            if (dir != null)
             {
-                if (dir != null)
+                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityThreshold)
                 {
-                    if (rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(highestPassability)))
-                    {
-                        highestPassability = dir;
-                    }
-                }
-
-                else
-                {
-                    break;
+                    possiblePassableDirections[index2] = dir;
+                    index2++;
                 }
             }
 
-            if (rc.canMove(highestPassability))
+            else
             {
-                rc.move(highestPassability);
+                break;
             }
+        }
+
+        if (possiblePassableDirections[0] != null)
+        {
+            rc.move(possiblePassableDirections[(int) (Math.random()*index1)]);
+        }
+
+        else if (possibleDirections[0] != null)
+        {
+            rc.move(possibleDirections[(int) (Math.random()*index1)]);
         }
     }
 
