@@ -92,7 +92,8 @@ public strictfp class RobotPlayer {
             System.out.println("I moved!");
     }
 
-    static void runSlanderer() throws GameActionException {
+    static void runSlanderer() throws GameActionException 
+    {
         if (tryMove(randomDirection()))
             System.out.println("I moved!");
     }

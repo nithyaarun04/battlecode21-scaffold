@@ -27,9 +27,7 @@ public strictfp class RobotPlayer {
 
     static Direction bugDirection = null;
 
-    static double lowerBoundPercentage = 0.05;
-
-    static double upperBoundPercentage = 0.35;
+    static double percentage = (Math.random()*(31)+5) / 100.0;
 
     static int currentVotes = 0;
 
@@ -77,22 +75,46 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (random < 0.4)
+        if (rc.getRoundNum() < 500)
         {
-            toBuild = RobotType.POLITICIAN;
-            influence = 14;
-        }
+            if (random < 0.7)
+            {
+                toBuild = RobotType.POLITICIAN;
+                influence = 14;
+            }
 
-        else if (random < 0.8)
-        {
-            toBuild = RobotType.SLANDERER;
-            influence = 1;
+            else if (random < 0.85)
+            {
+                toBuild = RobotType.SLANDERER;
+                influence = 1;
+            }
+
+            else
+            {
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
+            }
         }
 
         else
         {
-            toBuild = RobotType.MUCKRAKER;
-            influence = 1;
+            if (random < 0.35)
+            {
+                toBuild = RobotType.POLITICIAN;
+                influence = 14;
+            }
+
+            else if (random < 0.7)
+            {
+                toBuild = RobotType.SLANDERER;
+                influence = 1;
+            }
+
+            else
+            {
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
+            }
         }
 
         for (Direction dir : directions)
@@ -104,71 +126,123 @@ public strictfp class RobotPlayer {
             }
         }
 
-        int lowerBound = (int) (lowerBoundPercentage*(rc.getInfluence()));
-        int upperBound = (int) (upperBoundPercentage*(rc.getInfluence()));
-
         if (currentVotes == rc.getTeamVotes())
         {
-            // lost
-            if (lowerBoundPercentage+0.025 < 0.8)
+            // Lost or tied the previous round
+
+            if (percentage+0.025 < 0.8)
             {
-                lowerBoundPercentage += 0.025;
-                upperBoundPercentage += 0.025;
+                percentage += 0.025;
+            }
+
+            else
+            {
+                percentage = 0.8;
             }
         }
 
         else
         {
-            // won
-            if (lowerBoundPercentage-0.005 > 0.002)
+            // Won the previous round
+
+            if (percentage-0.005 > 0.002)
             {
-                lowerBoundPercentage -= 0.005;
-                upperBoundPercentage -= 0.005;
+                percentage -= 0.005;
+            }
+
+            else
+            {
+                percentage = 0.002;
             }
         }
 
         currentVotes = rc.getTeamVotes();
 
-        int randomBid = (int) (Math.random()*((upperBound-lowerBound+1)+lowerBound));
-
-        if (rc.canBid(randomBid))
+        if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
         {
-            rc.bid(randomBid);
+            rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
         }
     }
 
-    static void runPolitician() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
+    static void runPolitician() throws GameActionException 
+    {
         int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
-            return;
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
+        
+        for (RobotInfo a : nearbyRobots)
+        {
+            if (a.getTeam() == Team.NEUTRAL)
+            {
+                if (rc.canEmpower(actionRadius))
+                {
+                    rc.empower(actionRadius);
+                }
+            }
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+
+        tryMove(randomDirection());
     }
 
-    static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+    static void runSlanderer() throws GameActionException 
+    {
+        Direction[] possibleDirections = new Direction[8];
+        int index = 0;
+
+        for (Direction dir : directions)
+        {
+            if (rc.canMove(dir))
+            {
+                possibleDirections[index] = dir;
+                index++;
+            }
+        }
+
+        if (possibleDirections[0] != null)
+        {
+            Direction highestPassability = possibleDirections[0];
+
+            for (Direction dir : possibleDirections)
+            {
+                if (dir != null)
+                {
+                    if (rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(highestPassability)))
+                    {
+                        highestPassability = dir;
+                    }
+                }
+
+                else
+                {
+                    break;
+                }
+            }
+
+            if (rc.canMove(highestPassability))
+            {
+                rc.move(highestPassability);
+            }
+        }
     }
 
-    static void runMuckraker() throws GameActionException {
+    static void runMuckraker() throws GameActionException 
+    {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
-            if (robot.type.canBeExposed()) {
+        
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) 
+        {
+            if (robot.type.canBeExposed()) 
+            {
                 // It's a slanderer... go get them!
-                if (rc.canExpose(robot.location)) {
+                if (rc.canExpose(robot.location)) 
+                {
                     System.out.println("e x p o s e d");
                     rc.expose(robot.location);
                     return;
                 }
             }
         }
+
         if (tryMove(randomDirection()))
             System.out.println("I moved!");
     }
