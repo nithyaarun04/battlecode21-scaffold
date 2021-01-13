@@ -135,7 +135,7 @@ public strictfp class RobotPlayer {
                 influence = (int) (0.2 * rc.getInfluence());
             }
 
-            else if (random < 0.8)
+            else if (random < 0.4)
             {
                 toBuild = RobotType.SLANDERER;
                 influence = (int) (0.2 * rc.getInfluence());
