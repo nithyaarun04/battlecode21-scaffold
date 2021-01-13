@@ -73,40 +73,72 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 200)
+        if (rc.getRoundNum() < 200 
+            || (rc.getRoundNum() > 700 && rc.getRoundNum() < 800) 
+            || (rc.getRoundNum() > 1200 && rc.getRoundNum() < 1300)
+            || (rc.getRoundNum() > 1700 && rc.getRoundNum() < 1800)
+            || (rc.getRoundNum() > 2200 && rc.getRoundNum() < 2300)
+            || (rc.getRoundNum() > 2700 && rc.getRoundNum() < 2800))
         {
-            if (random < 0.6)
+            toBuild = RobotType.SLANDERER;
+            if (rc.getRoundNum() < 25)
             {
-                toBuild = RobotType.POLITICIAN;
-                influence = (int) (0.2 * (rc.getInfluence()));
+                influence = (int) (0.2 * rc.getInfluence());
             }
 
-            else if (random < 0.9)
+            else if (rc.getRoundNum() < 50)
             {
-                toBuild = RobotType.SLANDERER;
-                influence = (int) (0.2 * (rc.getInfluence()));
+                influence = (int) (0.25 * rc.getInfluence());
+            }
 
+            else if (rc.getRoundNum() < 75)
+            {
+                influence = (int) (0.3 * rc.getInfluence());
+            }
+
+            else if (rc.getRoundNum() < 100)
+            {
+                influence = (int) (0.35 * rc.getInfluence());
+            }
+
+            else if (rc.getRoundNum() < 125)
+            {
+                influence = (int) (0.4 * rc.getInfluence());
+            }
+
+            else if (rc.getRoundNum() < 150)
+            {
+                influence = (int) (0.45 * rc.getInfluence());
+            }
+
+            else if (rc.getRoundNum() < 175)
+            {
+                influence = (int) (0.50 * rc.getInfluence());
+            }
+
+            else if (rc.getRoundNum() < 200)
+            {
+                influence = (int) (0.55 * rc.getInfluence());
             }
 
             else
             {
-                toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = (int) (0.2 * rc.getInfluence());
             }
         }
 
         else
         {
-            if (random < 0.6)
+            if (random < 0.1)
             {
                 toBuild = RobotType.POLITICIAN;
-                influence = (int) (0.1 * (rc.getInfluence()));
+                influence = (int) (0.2 * rc.getInfluence());
             }
 
-            else if (random < 0.9)
+            else if (random < 0.8)
             {
                 toBuild = RobotType.SLANDERER;
-                influence = (int) (0.1 * (rc.getInfluence()));
+                influence = (int) (0.2 * rc.getInfluence());
             }
 
             else
@@ -130,7 +162,10 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (rc.getRoundNum() > 200)
+        int maxBid = 50;
+        boolean lastBidMax = false;
+
+        if (rc.getRoundNum() >= 200)
         {
             // Lost or tied the previous round
             if (currentVotes == rc.getTeamVotes())
@@ -144,6 +179,12 @@ public strictfp class RobotPlayer {
                 {
                     percentage = 0.8;
                 }
+            }
+
+            if (currentVotes == rc.getTeamVotes() && lastBidMax)
+            {
+                maxBid += 5;
+                lastBidMax = false;
             }
 
             // Won the previous round
@@ -162,9 +203,15 @@ public strictfp class RobotPlayer {
 
             currentVotes = rc.getTeamVotes();
 
-            if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
+            if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)) && (int) Math.ceil(rc.getInfluence()*percentage) < maxBid)
             {
                 rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
+            }
+
+            else if (rc.canBid(maxBid))
+            {
+                rc.bid(maxBid);
+                lastBidMax = true;
             }
         }
     }
@@ -224,7 +271,7 @@ public strictfp class RobotPlayer {
 
         if (possiblePassableDirections[0] != null)
         {
-            rc.move(possiblePassableDirections[(int) (Math.random()*index1)]);
+            rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
         }
 
         else if (possibleDirections[0] != null)
