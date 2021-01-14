@@ -105,56 +105,50 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 150 
-            || (rc.getRoundNum() > 500 && rc.getRoundNum() < 600) 
-            || (rc.getRoundNum() > 1000 && rc.getRoundNum() < 1100))
+        if (rc.getRoundNum() < 200)
         {
-            toBuild = RobotType.SLANDERER;
-            if (rc.getRoundNum() < 25)
+            if (random < 0.5)
             {
-                influence = (int) (0.2 * rc.getInfluence());
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
             }
-
-            else if (rc.getRoundNum() < 50)
+            else
             {
-                influence = (int) (0.25 * rc.getInfluence());
+                toBuild = RobotType.SLANDERER;
+                influence = 100;
             }
+        }
 
-            else if (rc.getRoundNum() < 75)
+        else if (rc.getRoundNum() >= 200 && rc.getRoundNum() < 400)
+        {
+            if (random < 0.2)
             {
+                toBuild = RobotType.POLITICIAN;
                 influence = (int) (0.3 * rc.getInfluence());
             }
 
-            else if (rc.getRoundNum() < 100)
+            else if (random < 0.5)
             {
-                influence = (int) (0.35 * rc.getInfluence());
-            }
-
-            else if (rc.getRoundNum() < 125)
-            {
-                influence = (int) (0.4 * rc.getInfluence());
-            }
-
-            else if (rc.getRoundNum() < 150)
-            {
-                influence = (int) (0.45 * rc.getInfluence());
+                toBuild = RobotType.SLANDERER;
+                influence = (int) (0.3 * rc.getInfluence());
             }
 
             else
             {
-                influence = (int) (0.2 * rc.getInfluence());
+                toBuild = RobotType.MUCKRAKER;
+                influence = 2;
             }
         }
 
         else
         {
-            if (random < 0.1)
+            if (random < 0.2)
             {
                 toBuild = RobotType.POLITICIAN;
                 influence = (int) (0.2 * rc.getInfluence());
             }
 
-            else if (random < 0.4)
+            else if (random < 0.5)
             {
                 toBuild = RobotType.SLANDERER;
                 influence = (int) (0.2 * rc.getInfluence());
@@ -163,7 +157,7 @@ public strictfp class RobotPlayer {
             else
             {
                 toBuild = RobotType.MUCKRAKER;
-                influence = 10;
+                influence = 50;
             }
         }
 
@@ -196,7 +190,7 @@ public strictfp class RobotPlayer {
         int maxBid = 50;
         boolean lastBidMax = false;
 
-        if (rc.getRoundNum() >= 200)
+        if (rc.getRoundNum() >= 50)
         {
             // Lost or tied the previous round
             if (currentVotes == rc.getTeamVotes())
