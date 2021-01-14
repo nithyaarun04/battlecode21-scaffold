@@ -1,5 +1,7 @@
 package MyRobot;
 import battlecode.common.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -23,7 +25,7 @@ public strictfp class RobotPlayer {
 
     static int turnCount;
 
-    static final double passabilityThreshold = 0.7;
+    static final double passabilityBound = 0.7;
 
     static Direction bugDirection = null;
 
@@ -31,12 +33,30 @@ public strictfp class RobotPlayer {
 
     static int currentVotes = 0;
 
+    static ArrayList<Integer> muckrakersCreatedIDs = new ArrayList<Integer>();
+
+    static int parentID;
+
+    static int test = 0;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
      **/
     @SuppressWarnings("unused")
-    public static void run(RobotController rc) throws GameActionException {
+    public static void run(RobotController rc) throws GameActionException 
+    {
+        if (!rc.getType().equals(RobotType.ENLIGHTENMENT_CENTER))
+        {            
+            for (RobotInfo robot : rc.senseNearbyRobots(2, rc.getTeam())) 
+            {
+                if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER)) 
+                {
+                    parentID = robot.ID;
+                    break;
+                }
+            }
+        }
 
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
@@ -69,6 +89,18 @@ public strictfp class RobotPlayer {
 
     static void runEnlightenmentCenter() throws GameActionException 
     {
+        for (int ID : muckrakersCreatedIDs)
+        {
+            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
+            {
+                if (rc.canSetFlag(rc.getFlag(ID)))
+                {
+                    rc.setFlag(rc.getFlag(ID));
+                    break;
+                }
+            }
+        }
+
         double random = Math.random();
         RobotType toBuild = null;
         int influence = 0;
@@ -158,6 +190,18 @@ public strictfp class RobotPlayer {
             if (rc.canBuildRobot(toBuild, dir, influence))
             {
                 rc.buildRobot(toBuild, dir, influence);
+                if (toBuild.equals(RobotType.MUCKRAKER))
+                {
+                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                    for (RobotInfo robot : nearbyRobots)
+                    {
+                        if (robot.location.equals(rc.getLocation().add(dir)))
+                        {
+                            muckrakersCreatedIDs.add(robot.ID);
+                            break;
+                        }
+                    }
+                }
                 break;
             }
         }
@@ -256,7 +300,7 @@ public strictfp class RobotPlayer {
         {
             if (dir != null)
             {
-                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityThreshold)
+                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
                 {
                     possiblePassableDirections[index2] = dir;
                     index2++;
@@ -284,7 +328,12 @@ public strictfp class RobotPlayer {
     {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
-        
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        {
+            basicBug(getLocationFromFlag(rc.getFlag(parentID)));
+        }
+
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) 
         {
             if (robot.type.canBeExposed()) 
@@ -295,6 +344,11 @@ public strictfp class RobotPlayer {
                     rc.expose(robot.location);
                     return;
                 }
+            }
+
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER))
+            {
+                sendLocation(robot.location);
             }
         }
 
@@ -333,123 +387,93 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    /**
-     * Sets the robot's flag to its location.
-     *
-     * @throws GameActionException
-     */
-    static void sendLocation() throws GameActionException
-    {
-        MapLocation location = rc.getLocation();
+    ////////////////////////////////////////////////////////////////////////////
+    // Pathfinding Lecture Code
+
+    static final int NBITS = 7;
+    static final int BITMASK = (1 << NBITS) - 1;
+
+    static void sendLocation(MapLocation location) throws GameActionException {
         int x = location.x, y = location.y;
-        int encodedLocation = (x % 128) * 128 + (y % 128);
-        if (rc.canSetFlag(encodedLocation))
-        {
+        int encodedLocation = ((x & BITMASK) << NBITS) + (y & BITMASK);
+        if (rc.canSetFlag(encodedLocation)) {
             rc.setFlag(encodedLocation);
         }
     }
 
-    /**
-     * Sets the robot's flag to its location and any extra information.
-     *
-     * @param extraInformation Extra information to encode in the flag
-     * @throws GameActionException
-     */
-    static void sendLocation(int extraInformation) throws GameActionException
-    {
-        MapLocation location = rc.getLocation();
+    @SuppressWarnings("unused")
+    static void sendLocation(MapLocation location, int extraInformation) throws GameActionException {
         int x = location.x, y = location.y;
-        int encodedLocation = extraInformation * 128 * 128 + (x%128) * 128 + (y % 128);
-        if (rc.canSetFlag(encodedLocation))
-        {
+        int encodedLocation = (extraInformation << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
+        if (rc.canSetFlag(encodedLocation)) {
             rc.setFlag(encodedLocation);
         }
     }
 
-    /**
-     * Returns the location encoded in the flag.
-     *
-     * @param flag The flag to decode
-     * @return the location encoded in the flag
-     */
-    static MapLocation getLocationFromFlag(int flag)
-    {
-        int y = flag % 128;
-        int x = (flag / 128) % 128;
-        int extraInformation = flag / 128 / 128;
+    static MapLocation getLocationFromFlag(int flag) {
+        int y = flag & BITMASK;
+        int x = (flag >> NBITS) & BITMASK;
+        // int extraInformation = flag >> (2*NBITS);
 
         MapLocation currentLocation = rc.getLocation();
-        int offsetX128 = currentLocation.x / 128;
-        int offsetY128 = currentLocation.y / 128;
-        MapLocation actualLocation = new MapLocation(offsetX128 * 128 + x, offsetY128 * 128 + y);
+        int offsetX128 = currentLocation.x >> NBITS;
+        int offsetY128 = currentLocation.y >> NBITS;
+        MapLocation actualLocation = new MapLocation((offsetX128 << NBITS) + x, (offsetY128 << NBITS) + y);
 
-        MapLocation alternative = actualLocation.translate(-128, 0);
-        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation))
-        {
+        // You can probably code this in a neater way, but it works
+        MapLocation alternative = actualLocation.translate(-(1 << NBITS), 0);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)) {
             actualLocation = alternative;
         }
-
-        alternative = actualLocation.translate(128, 0);
-        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation))
-        {
+        alternative = actualLocation.translate(1 << NBITS, 0);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)) {
             actualLocation = alternative;
         }
-
-        alternative = actualLocation.translate(0, -128);
-        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation))
-        {
+        alternative = actualLocation.translate(0, -(1 << NBITS));
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)) {
             actualLocation = alternative;
         }
-
-        alternative = actualLocation.translate(0, 128);
-        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation))
-        {
+        alternative = actualLocation.translate(0, 1 << NBITS);
+        if (rc.getLocation().distanceSquaredTo(alternative) < rc.getLocation().distanceSquaredTo(actualLocation)) {
             actualLocation = alternative;
         }
-
         return actualLocation;
     }
 
-    /**
-     * Returns the location encoded in the flag.
-     *
-     * @param target The target location that the bug is aiming for.
-     * @throws GameActionException
-     */
-    static void basicBug(MapLocation target) throws GameActionException
-    {
-        Direction d = rc.getLocation().directionTo(target);
-        
-        if (rc.getLocation().equals(target))
-        {
-            // do something else, now that you're there
-        }
 
-        else if (rc.isReady())
-        {
-            if (rc.canMove(d) && rc.sensePassability(rc.getLocation().add(d)) >= passabilityThreshold)
-            {
+    ////////////////////////////////////////////////////////////////////////////
+    // BASIC BUG - just follow the obstacle while it's in the way
+    //             not the best bug, but works for "simple" obstacles
+    //             for better bugs, think about Bug 2!
+
+    static final double passabilityThreshold = 0.7;
+
+    static void basicBug(MapLocation target) throws GameActionException {
+        Direction d = rc.getLocation().directionTo(target);
+        if (rc.getLocation().equals(target)) {
+            // do something else, now that you're there
+            // here we'll just explode
+            if (rc.canEmpower(1)) {
+                rc.empower(1);
+            }
+        } else if (rc.isReady()) {
+            if (rc.canMove(d) && rc.sensePassability(rc.getLocation().add(d)) >= passabilityThreshold) {
                 rc.move(d);
                 bugDirection = null;
-            }
-
-            else
-            {
-                if (bugDirection == null)
-                {
-                    bugDirection = d.rotateRight();
+            } else {
+                if (bugDirection == null) {
+                    bugDirection = d;
                 }
-
-                for (int i = 0; i < 8; i++)
-                {
-                    if (rc.canMove(bugDirection) && rc.sensePassability(rc.getLocation().add(bugDirection)) >= passabilityThreshold)
-                    {
+                for (int i = 0; i < 8; ++i) {
+                    if (rc.canMove(bugDirection) && rc.sensePassability(rc.getLocation().add(bugDirection)) >= passabilityThreshold) {
+                        rc.setIndicatorDot(rc.getLocation().add(bugDirection), 0, 255, 255);
                         rc.move(bugDirection);
+                        bugDirection = bugDirection.rotateLeft();
                         break;
                     }
+                    rc.setIndicatorDot(rc.getLocation().add(bugDirection), 255, 0, 0);
                     bugDirection = bugDirection.rotateRight();
                 }
-                bugDirection = bugDirection.rotateLeft();
             }
         }
     }
