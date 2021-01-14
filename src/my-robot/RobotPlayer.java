@@ -105,12 +105,9 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 200 
-            || (rc.getRoundNum() > 700 && rc.getRoundNum() < 800) 
-            || (rc.getRoundNum() > 1200 && rc.getRoundNum() < 1300)
-            || (rc.getRoundNum() > 1700 && rc.getRoundNum() < 1800)
-            || (rc.getRoundNum() > 2200 && rc.getRoundNum() < 2300)
-            || (rc.getRoundNum() > 2700 && rc.getRoundNum() < 2800))
+        if (rc.getRoundNum() < 150 
+            || (rc.getRoundNum() > 500 && rc.getRoundNum() < 600) 
+            || (rc.getRoundNum() > 1000 && rc.getRoundNum() < 1100))
         {
             toBuild = RobotType.SLANDERER;
             if (rc.getRoundNum() < 25)
@@ -143,16 +140,6 @@ public strictfp class RobotPlayer {
                 influence = (int) (0.45 * rc.getInfluence());
             }
 
-            else if (rc.getRoundNum() < 175)
-            {
-                influence = (int) (0.50 * rc.getInfluence());
-            }
-
-            else if (rc.getRoundNum() < 200)
-            {
-                influence = (int) (0.55 * rc.getInfluence());
-            }
-
             else
             {
                 influence = (int) (0.2 * rc.getInfluence());
@@ -176,7 +163,7 @@ public strictfp class RobotPlayer {
             else
             {
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = 10;
             }
         }
 
