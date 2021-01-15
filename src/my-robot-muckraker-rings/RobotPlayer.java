@@ -1,4 +1,4 @@
-package MyRobot;
+package MyRobotMuckrakerRings;
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,8 +34,6 @@ public strictfp class RobotPlayer {
     static int currentVotes = 0;
 
     static ArrayList<Integer> muckrakersCreatedIDs = new ArrayList<Integer>();
-
-    static ArrayList<Integer> politiciansAndSlanderersCreatedIDs = new ArrayList<Integer>();
 
     static int parentID;
 
@@ -93,14 +91,23 @@ public strictfp class RobotPlayer {
     {
         for (int ID : muckrakersCreatedIDs)
         {
-            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
+            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0 && rc.getFlag(ID) != 128 * 128)
             {
                 if (rc.canSetFlag(rc.getFlag(ID)))
                 {
                     rc.setFlag(rc.getFlag(ID));
                     break;
                 }
-            }    
+            }
+
+            else if (rc.canGetFlag(ID) && rc.getFlag(ID) == 128 * 128)
+            {
+                if (rc.canSetFlag(0))
+                {
+                    rc.setFlag(0);
+                    break;
+                }
+            }            
         }
 
         double random = Math.random();
@@ -192,20 +199,6 @@ public strictfp class RobotPlayer {
                         }
                     }
                 }
-
-                else
-                {
-                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
-                    for (RobotInfo robot : nearbyRobots)
-                    {
-                        if (robot.location.equals(rc.getLocation().add(dir)))
-                        {
-                            politiciansAndSlanderersCreatedIDs.add(robot.ID);
-                            break;
-                        }
-                    }
-                }
-
                 break;
             }
         }
@@ -269,11 +262,6 @@ public strictfp class RobotPlayer {
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
         
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
-        {
-            MapLocation target = getLocationFromFlag(rc.getFlag(parentID));
-        }
-
         for (RobotInfo a : nearbyRobots)
         {
             if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
@@ -335,6 +323,79 @@ public strictfp class RobotPlayer {
 
     static void runMuckraker() throws GameActionException 
     {
+        Team enemy = rc.getTeam().opponent();
+        int actionRadius = rc.getType().actionRadiusSquared;
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        {
+            MapLocation target = getLocationFromFlag(rc.getFlag(parentID));
+            
+            if (rc.canSetFlag(0))
+            {
+                rc.setFlag(0);
+            }
+
+            boolean surrounded = true;
+
+            if (Math.sqrt(rc.getLocation().distanceSquaredTo(target)) < 3)
+            {
+                for (Direction dir : directions)
+                {
+                    if (!rc.isLocationOccupied(target.add(dir)))
+                    {
+                        surrounded = false;
+                        break;
+                    }
+                }
+
+                if (Math.sqrt(rc.getLocation().distanceSquaredTo(target)) < 2 || surrounded)
+                {
+                    move = false;
+                }
+
+                else
+                {
+                    move = true;
+                }
+            }
+            
+            else
+            {
+                basicBug(target);
+            }
+
+            boolean fullySurrounded = false;
+
+            if (Math.sqrt(rc.getLocation().distanceSquaredTo(target)) < 3)
+            {
+                fullySurrounded = true;
+
+                for (int i = 0; i < directions.length; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        if (!rc.isLocationOccupied(target.add(directions[i]).add(directions[i])))
+                        {
+                            fullySurrounded = false;
+                        }
+                    }
+
+                    else
+                    {
+                        if (!rc.isLocationOccupied(target.add(directions[i]).add(directions[i])) || !rc.isLocationOccupied(target.add(directions[i]).add(directions[i].rotateRight())) || !rc.isLocationOccupied(target.add(directions[i]).add(directions[i].rotateLeft())))
+                        {
+                            fullySurrounded = false;
+                        }
+                    }
+                }
+            }
+
+            if (fullySurrounded && rc.canSetFlag(128 * 128))
+            {
+                rc.setFlag(128 * 128);
+            }
+        }
+
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) 
         {
             if (robot.type.canBeExposed()) 
