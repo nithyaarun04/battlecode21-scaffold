@@ -37,6 +37,8 @@ public strictfp class RobotPlayer {
 
     static int parentID;
 
+    static boolean move = true;
+
     static int test = 0;
 
     /**
@@ -112,9 +114,16 @@ public strictfp class RobotPlayer {
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
             }
-            else
+
+            else if (random < 0.75)
             {
                 toBuild = RobotType.SLANDERER;
+                influence = 100;
+            }
+
+            else
+            {
+                toBuild = RobotType.POLITICIAN;
                 influence = 100;
             }
         }
@@ -127,7 +136,7 @@ public strictfp class RobotPlayer {
                 influence = (int) (0.3 * rc.getInfluence());
             }
 
-            else if (random < 0.5)
+            else if (random < 0.4)
             {
                 toBuild = RobotType.SLANDERER;
                 influence = (int) (0.3 * rc.getInfluence());
@@ -142,13 +151,13 @@ public strictfp class RobotPlayer {
 
         else
         {
-            if (random < 0.2)
+            if (random < 0.3)
             {
                 toBuild = RobotType.POLITICIAN;
                 influence = (int) (0.2 * rc.getInfluence());
             }
 
-            else if (random < 0.5)
+            else if (random < 0.6)
             {
                 toBuild = RobotType.SLANDERER;
                 influence = (int) (0.2 * rc.getInfluence());
@@ -168,7 +177,7 @@ public strictfp class RobotPlayer {
 
         for (Direction dir : directions)
         {
-            if (rc.canBuildRobot(toBuild, dir, influence))
+            if (rc.canBuildRobot(toBuild, dir, influence) && rc.getRoundNum() % 2 == 0)
             {
                 rc.buildRobot(toBuild, dir, influence);
                 if (toBuild.equals(RobotType.MUCKRAKER))
@@ -248,7 +257,7 @@ public strictfp class RobotPlayer {
         
         for (RobotInfo a : nearbyRobots)
         {
-            if (a.getTeam() == Team.NEUTRAL)
+            if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
             {
                 if (rc.canEmpower(actionRadius))
                 {
@@ -312,7 +321,16 @@ public strictfp class RobotPlayer {
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
         {
-            basicBug(getLocationFromFlag(rc.getFlag(parentID)));
+            MapLocation target = getLocationFromFlag(rc.getFlag(parentID));
+            if (Math.sqrt(rc.getLocation().distanceSquaredTo(target)) < 2)
+            {
+                move = false;
+            }
+            
+            else
+            {
+                basicBug(target);
+            }
         }
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) 
@@ -333,7 +351,10 @@ public strictfp class RobotPlayer {
             }
         }
 
-        tryMove(randomDirection());
+        if (move)
+        {
+            tryMove(randomDirection());
+        }
     }
 
     /**
