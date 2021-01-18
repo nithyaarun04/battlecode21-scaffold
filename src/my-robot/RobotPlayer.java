@@ -272,14 +272,13 @@ public strictfp class RobotPlayer {
 
         else
         {
-
-            if (random < 0.3)
+            if (random < 0.2)
             {
                 toBuild = RobotType.POLITICIAN;
                 influence = (int) (0.2 * rc.getInfluence());
             }
 
-            if (random < 0.6 && rc.getInfluence() >= 42)
+            if (random < 0.45 && rc.getInfluence() >= 42)
             {
                 toBuild = RobotType.SLANDERER;
                 if ((int) (0.5 * rc.getInfluence()) <= 40)
