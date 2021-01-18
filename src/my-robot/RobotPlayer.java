@@ -137,66 +137,77 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 200)
+        if (rc.getRoundNum() < 30)
         {
-            if (random < 0.5)
+            toBuild = RobotType.SLANDERER;
+            if (rc.getInfluence() > 3000)
             {
-                toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = 949;
             }
-
-            else if (random < 0.75)
-            {
-                toBuild = RobotType.SLANDERER;
-                influence = 100;
-            }
-
             else
             {
-                toBuild = RobotType.POLITICIAN;
-                influence = 100;
+                influence = (int) (0.2 * rc.getInfluence());
             }
         }
 
-        else if (rc.getRoundNum() >= 200 && rc.getRoundNum() < 400)
+        else if (rc.getRoundNum() < 200)
         {
-            if (random < 0.2)
-            {
-                toBuild = RobotType.POLITICIAN;
-                influence = (int) (0.3 * rc.getInfluence());
-            }
-
-            else if (random < 0.4)
-            {
-                toBuild = RobotType.SLANDERER;
-                influence = (int) (0.3 * rc.getInfluence());
-            }
-
-            else
-            {
-                toBuild = RobotType.MUCKRAKER;
-                influence = 2;
-            }
+            toBuild = RobotType.POLITICIAN;
+            influence = 100;
         }
 
         else
         {
-            if (random < 0.3)
+            RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
+            boolean nearbyMuckrakerBool = false;
+
+            for (int i = 0; i < nearbyBotsArray.length; i++)
             {
-                toBuild = RobotType.POLITICIAN;
-                influence = (int) (0.2 * rc.getInfluence());
+                if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER);
+                {
+                    nearbyMuckrakerBool = true;
+                    break;
+                }
             }
 
-            else if (random < 0.6)
+            if (nearbyMuckrakerBool)
             {
-                toBuild = RobotType.SLANDERER;
-                influence = (int) (0.2 * rc.getInfluence());
+                if (random < 0.5)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = (int) (0.2 * rc.getInfluence());   
+                }
+                else
+                {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 2;
+                }
             }
 
             else
             {
-                toBuild = RobotType.MUCKRAKER;
-                influence = 50;
+                if (random < 0.3)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = (int) (0.2 * rc.getInfluence());
+                }
+                else if (random < 0.5)
+                {
+                    toBuild = RobotType.SLANDERER;
+                    if (rc.getInfluence() > 3000)
+                    {
+                        influence = 949;
+                    }
+                    else
+                    {
+                        influence = (int) (0.2 * rc.getInfluence());
+                    }
+                }
+                else
+                {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 2;
+                }
             }
         }
 
