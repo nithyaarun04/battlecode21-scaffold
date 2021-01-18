@@ -279,11 +279,7 @@ public strictfp class RobotPlayer {
             {
                 if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                 {
-<<<<<<< HEAD
-                    nearbyMuckrakerBool = false;
-=======
-                    nearbyMuckrakerBool = true; // FIX LATER
->>>>>>> c7f2a710460ca281848eca3fe6bd5c5d0a5b9a45
+                    nearbyMuckrakerBool = true;
                     break;
                 }
             }
@@ -441,11 +437,6 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (influence > 400)
-        {
-            influence = 400;
-        }
-
         for (Direction dir : directions)
         {
             if (rc.canBuildRobot(toBuild, dir, influence) && rc.getRoundNum() % 2 == 0)
@@ -485,8 +476,7 @@ public strictfp class RobotPlayer {
 
         if (rc.getRoundNum() >= 50)
         {
-        // Lost or tied the previous round
-            if (currentVotes == rc.getTeamVotes())
+            if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
             {
                 if (percentage+0.025 < 0.8)
                 {
@@ -504,9 +494,8 @@ public strictfp class RobotPlayer {
                 maxBid += 5;
                 lastBidMax = false;
             }
-
-        // Won the previous round
-            else
+        
+            else // Won the previous round
             {
                 if (percentage-0.005 > 0.002)
                 {
@@ -581,29 +570,9 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
-        ///////////////////////////
+        // GIVING SPEECHES
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
-<<<<<<< HEAD
-        
-        if ((target == null || !nonFriendlyEnlightenmentCenterLocations.contains(target)) && nonFriendlyEnlightenmentCenterLocations.size() != 0)
-        {
-            target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
-        }
-
-        else if (!nonFriendlyEnlightenmentCenterLocations.contains(target))
-=======
-
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0 && target == null)
->>>>>>> c7f2a710460ca281848eca3fe6bd5c5d0a5b9a45
-        {
-            target = null;
-        }
-
-        if (target != null)
-        {
-            basicBug(target);
-        }
 
         for (RobotInfo a : nearbyRobots)
         {
@@ -616,11 +585,52 @@ public strictfp class RobotPlayer {
             }
         }
 
+        // MOVING TOWARDS TARGET
+        
+        if ((target == null || !nonFriendlyEnlightenmentCenterLocations.contains(target)) && nonFriendlyEnlightenmentCenterLocations.size() != 0)
+        {
+            target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
+        }
+
+        else if (!nonFriendlyEnlightenmentCenterLocations.contains(target))
+        {
+            target = null;
+        }
+
+        if (target != null)
+        {
+            basicBug(target);
+        }
+
+        // MOVING IN A RANDOM DIRECTION UNTIL HIT A WALL
+
         if (target == null && rc.getCooldownTurns() < 1)
         {
             ArrayList<Direction> possibleDirections;
 
-            do
+            if (toMove == null)
+            {
+                toMove = randomDirection();
+            }
+
+            possibleDirections = new ArrayList<Direction>();
+
+            if (rc.canMove(toMove))
+            {
+                possibleDirections.add(toMove);
+            }
+
+            if (rc.canMove(toMove.rotateLeft()))
+            {
+                possibleDirections.add(toMove.rotateLeft());
+            }
+
+            if (rc.canMove(toMove.rotateRight()))
+            {
+                possibleDirections.add(toMove.rotateLeft());
+            }
+
+            while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
             {
                 toMove = randomDirection();
 
@@ -640,15 +650,7 @@ public strictfp class RobotPlayer {
                 {
                     possibleDirections.add(toMove.rotateLeft());
                 }
-
-                if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)) || toMove == null)
-                {
-                    do 
-                    {
-                        toMove = randomDirection();
-                    } while (!rc.onTheMap(rc.getLocation().add(toMove)));
-                }
-            } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
+            }
 
             Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
 
@@ -714,7 +716,7 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
-        ///////////////////////////
+        // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
 
         Direction[] possibleDirections = new Direction[8];
         int index1 = 0;
@@ -806,35 +808,32 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
-        ///////////////////////////
+        // EXPOSING ENEMY SLANDERERS
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
         {
             if (robot.type.canBeExposed()) 
             {
-                    // It's a slanderer... go get them!
+                // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) 
                 {
                     rc.expose(robot.location);
                     return;
                 }
             }
+        }
 
-            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
+        // MOVING IN A RANDOM DIRECTION UNTIL HIT A WALL
+
+        if (rc.getCooldownTurns() < 1)
+        {
+            ArrayList<Direction> possibleDirections;
+
+            if (toMove == null)
             {
-                sendLocation(robot.location);
+                toMove = randomDirection();
             }
-        }
 
-        if (toMove == null)
-        {
-            toMove = randomDirection();
-        }
-
-        ArrayList<Direction> possibleDirections;
-
-        do
-        {
             possibleDirections = new ArrayList<Direction>();
 
             if (rc.canMove(toMove))
@@ -852,28 +851,42 @@ public strictfp class RobotPlayer {
                 possibleDirections.add(toMove.rotateLeft());
             }
 
-            if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
+            while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
             {
-                do 
+                toMove = randomDirection();
+
+                possibleDirections = new ArrayList<Direction>();
+
+                if (rc.canMove(toMove))
                 {
-                    toMove = randomDirection();
-                } while (!rc.onTheMap(rc.getLocation().add(toMove)));
+                    possibleDirections.add(toMove);
+                }
+
+                if (rc.canMove(toMove.rotateLeft()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
+
+                if (rc.canMove(toMove.rotateRight()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
             }
-        } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
 
-        Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
+            Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
 
-        for (Direction dir : possibleDirections)
-        {
-            if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
+            for (Direction dir : possibleDirections)
             {
-                actualMove = dir;
+                if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
+                {
+                    actualMove = dir;
+                }
             }
-        }
 
-        if (rc.canMove(actualMove))
-        {
-            rc.move(actualMove);
+            if (rc.canMove(actualMove))
+            {
+                rc.move(actualMove);
+            }
         }
     }
 
