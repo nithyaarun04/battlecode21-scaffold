@@ -279,7 +279,7 @@ public strictfp class RobotPlayer {
             {
                 if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                 {
-                    nearbyMuckrakerBool = false; // FIX LATER
+                    nearbyMuckrakerBool = true; // FIX LATER
                     break;
                 }
             }
@@ -303,7 +303,7 @@ public strictfp class RobotPlayer {
                 if (random < 0.4)
                 {
                     toBuild = RobotType.POLITICIAN;
-                    influence = (int) (0.1 * rc.getInfluence());
+                    influence = (int) (0.2 * rc.getInfluence());
                 }
                 else if (random < 0.6 && rc.getInfluence() >= 42)
                 {
@@ -530,76 +530,287 @@ public strictfp class RobotPlayer {
         }
     }
 
-static void runPolitician() throws GameActionException 
-{
-    int actionRadius = rc.getType().actionRadiusSquared;
-
-    if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+    static void runPolitician() throws GameActionException 
     {
-        MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
-        int extraInformation = getExtraInformationFromFlag(parentID);
+        int actionRadius = rc.getType().actionRadiusSquared;
 
-        if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
         {
-            nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-        }
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
+            int extraInformation = getExtraInformationFromFlag(parentID);
 
-        else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-        {
-            nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-        }
-    }
-
-    boolean setFlag = false;
-
-    for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
-    {
-        if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
-        {
-            sendLocation(robot.location);
-            setFlag = true;
-        }
-    }
-
-    for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-    {
-        if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
-        {
-            sendLocation(loc, 1);
-            setFlag = true;
-        }
-    }
-
-    if (!setFlag && rc.canSetFlag(0))
-    {
-        rc.setFlag(0);
-    }
-
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
-
-    if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0 && target == null)
-    {
-        MapLocation target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
-    }
-
-    if (target != null)
-    {
-        basicBug(target);
-    }
-
-    for (RobotInfo a : nearbyRobots)
-    {
-        if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
-        {
-            if (rc.canEmpower(actionRadius))
+            if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
             {
-                rc.empower(actionRadius);
+                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
+            }
+
+            else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            {
+                nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
+            }
+        }
+
+        boolean setFlag = false;
+
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        {
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            {
+                sendLocation(robot.location);
+                setFlag = true;
+            }
+        }
+
+        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
+        {
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
+            {
+                sendLocation(loc, 1);
+                setFlag = true;
+            }
+        }
+
+        if (!setFlag && rc.canSetFlag(0))
+        {
+            rc.setFlag(0);
+        }
+
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0 && target == null)
+        {
+            MapLocation target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
+        }
+
+        if (target != null)
+        {
+            basicBug(target);
+        }
+
+        for (RobotInfo a : nearbyRobots)
+        {
+            if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
+            {
+                if (rc.canEmpower(actionRadius))
+                {
+                    rc.empower(actionRadius);
+                }
+            }
+        }
+
+        if (target == null && rc.getCooldownTurns() == 0)
+        {
+            if (toMove == null)
+            {
+                toMove = randomDirection();
+            }
+
+            ArrayList<Direction> possibleDirections;
+
+            do
+            {
+                possibleDirections = new ArrayList<Direction>();
+
+                if (rc.canMove(toMove))
+                {
+                    possibleDirections.add(toMove);
+                }
+
+                if (rc.canMove(toMove.rotateLeft()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
+
+                if (rc.canMove(toMove.rotateRight()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
+
+                if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
+                {
+                    do 
+                    {
+                        toMove = randomDirection();
+                    } while (!rc.onTheMap(rc.getLocation().add(toMove)));
+                }
+            } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
+
+            Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
+
+            for (Direction dir : possibleDirections)
+            {
+                if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
+                {
+                    actualMove = dir;
+                }
+            }
+
+            if (rc.canMove(actualMove))
+            {
+                rc.move(actualMove);
             }
         }
     }
 
-    if (target == null && rc.getCooldownTurns() == 0)
+    static void runSlanderer() throws GameActionException 
     {
+        int actionRadius = rc.getType().actionRadiusSquared;
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        {
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
+            int extraInformation = getExtraInformationFromFlag(parentID);
+
+            if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            {
+                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
+            }
+
+            else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            {
+                nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
+            }
+        }
+
+        boolean setFlag = false;
+
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        {
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            {
+                sendLocation(robot.location);
+                setFlag = true;
+            }
+        }
+
+        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
+        {
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
+            {
+                sendLocation(loc, 1);
+                setFlag = true;
+            }
+        }
+
+        if (!setFlag && rc.canSetFlag(0))
+        {
+            rc.setFlag(0);
+        }
+
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
+        {
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
+            {
+                sendLocation(robot.location);
+            }
+        }
+
+        Direction[] possibleDirections = new Direction[8];
+        int index1 = 0;
+
+        for (Direction dir : directions)
+        {
+            if (rc.canMove(dir))
+            {
+                possibleDirections[index1] = dir;
+                index1++;
+            }
+        }
+
+        Direction[] possiblePassableDirections = new Direction[8];
+        int index2 = 0;
+
+        for (Direction dir : possibleDirections)
+        {
+            if (dir != null)
+            {
+                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
+                {
+                    possiblePassableDirections[index2] = dir;
+                    index2++;
+                }
+            }
+
+            else
+            {
+                break;
+            }
+        }
+
+        if (possiblePassableDirections[0] != null)
+        {
+            rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
+        }
+
+        else if (possibleDirections[0] != null)
+        {
+            rc.move(possibleDirections[(int) (Math.random()*index1)]);
+        }
+    }
+
+    static void runMuckraker() throws GameActionException 
+    {
+        int actionRadius = rc.getType().actionRadiusSquared;
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        {
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
+            int extraInformation = getExtraInformationFromFlag(parentID);
+
+            if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            {
+                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
+            }
+
+            else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            {
+                nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
+            }
+        }
+
+        boolean setFlag = false;
+
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        {
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            {
+                sendLocation(robot.location);
+                setFlag = true;
+            }
+        }
+
+        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
+        {
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
+            {
+                sendLocation(loc, 1);
+                setFlag = true;
+            }
+        }
+
+        if (!setFlag && rc.canSetFlag(0))
+        {
+            rc.setFlag(0);
+        }
+
+        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
+        {
+            if (robot.type.canBeExposed()) 
+            {
+                    // It's a slanderer... go get them!
+                if (rc.canExpose(robot.location)) 
+                {
+                    rc.expose(robot.location);
+                    return;
+                }
+            }
+
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
+            {
+                sendLocation(robot.location);
+            }
+        }
+
         if (toMove == null)
         {
             toMove = randomDirection();
@@ -650,217 +861,6 @@ static void runPolitician() throws GameActionException
             rc.move(actualMove);
         }
     }
-}
-
-static void runSlanderer() throws GameActionException 
-{
-    int actionRadius = rc.getType().actionRadiusSquared;
-
-    if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
-    {
-        MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
-        int extraInformation = getExtraInformationFromFlag(parentID);
-
-        if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-        {
-            nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-        }
-
-        else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-        {
-            nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-        }
-    }
-
-    boolean setFlag = false;
-
-    for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
-    {
-        if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
-        {
-            sendLocation(robot.location);
-            setFlag = true;
-        }
-    }
-
-    for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-    {
-        if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
-        {
-            sendLocation(loc, 1);
-            setFlag = true;
-        }
-    }
-
-    if (!setFlag && rc.canSetFlag(0))
-    {
-        rc.setFlag(0);
-    }
-
-    for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
-    {
-        if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
-        {
-            sendLocation(robot.location);
-        }
-    }
-
-    Direction[] possibleDirections = new Direction[8];
-    int index1 = 0;
-
-    for (Direction dir : directions)
-    {
-        if (rc.canMove(dir))
-        {
-            possibleDirections[index1] = dir;
-            index1++;
-        }
-    }
-
-    Direction[] possiblePassableDirections = new Direction[8];
-    int index2 = 0;
-
-    for (Direction dir : possibleDirections)
-    {
-        if (dir != null)
-        {
-            if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
-            {
-                possiblePassableDirections[index2] = dir;
-                index2++;
-            }
-        }
-
-        else
-        {
-            break;
-        }
-    }
-
-    if (possiblePassableDirections[0] != null)
-    {
-        rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
-    }
-
-    else if (possibleDirections[0] != null)
-    {
-        rc.move(possibleDirections[(int) (Math.random()*index1)]);
-    }
-}
-
-static void runMuckraker() throws GameActionException 
-{
-    int actionRadius = rc.getType().actionRadiusSquared;
-
-    if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
-    {
-        MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
-        int extraInformation = getExtraInformationFromFlag(parentID);
-
-        if (extraInformation == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-        {
-            nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-        }
-
-        else if (extraInformation == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-        {
-            nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-        }
-    }
-
-    boolean setFlag = false;
-
-    for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
-    {
-        if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
-        {
-            sendLocation(robot.location);
-            setFlag = true;
-        }
-    }
-
-    for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-    {
-        if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).team == rc.getTeam())
-        {
-            sendLocation(loc, 1);
-            setFlag = true;
-        }
-    }
-
-    if (!setFlag && rc.canSetFlag(0))
-    {
-        rc.setFlag(0);
-    }
-
-    for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
-    {
-        if (robot.type.canBeExposed()) 
-        {
-                // It's a slanderer... go get them!
-            if (rc.canExpose(robot.location)) 
-            {
-                rc.expose(robot.location);
-                return;
-            }
-        }
-
-        if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
-        {
-            sendLocation(robot.location);
-        }
-    }
-
-    if (toMove == null)
-    {
-        toMove = randomDirection();
-    }
-
-    ArrayList<Direction> possibleDirections;
-
-    do
-    {
-        possibleDirections = new ArrayList<Direction>();
-
-        if (rc.canMove(toMove))
-        {
-            possibleDirections.add(toMove);
-        }
-
-        if (rc.canMove(toMove.rotateLeft()))
-        {
-            possibleDirections.add(toMove.rotateLeft());
-        }
-
-        if (rc.canMove(toMove.rotateRight()))
-        {
-            possibleDirections.add(toMove.rotateLeft());
-        }
-
-        if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
-        {
-            do 
-            {
-                toMove = randomDirection();
-            } while (!rc.onTheMap(rc.getLocation().add(toMove)));
-        }
-    } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
-
-    Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
-
-    for (Direction dir : possibleDirections)
-    {
-        if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
-        {
-            actualMove = dir;
-        }
-    }
-
-    if (rc.canMove(actualMove))
-    {
-        rc.move(actualMove);
-    }
-}
 
     /**
      * Returns a random Direction.
