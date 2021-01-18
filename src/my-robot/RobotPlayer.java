@@ -133,121 +133,124 @@ public strictfp class RobotPlayer {
             }
         }
 
-        double random = Math.random();
-        RobotType toBuild = null;
-        int influence = 0;
-
-        if (rc.getRoundNum() < 30)
+        if (rc.getInfluence() > 100)
         {
-            toBuild = RobotType.SLANDERER;
-            if (rc.getInfluence() > 3000)
-            {
-                influence = 949;
-            }
-            else
-            {
-                influence = (int) (0.2 * rc.getInfluence());
-            }
-        }
+            double random = Math.random();
+            RobotType toBuild = null;
+            int influence = 0;
 
-        else if (rc.getRoundNum() < 200)
-        {
-            toBuild = RobotType.POLITICIAN;
-            influence = 100;
-        }
-
-        else
-        {
-            RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
-            boolean nearbyMuckrakerBool = false;
-
-            for (int i = 0; i < nearbyBotsArray.length; i++)
+            if (rc.getRoundNum() < 50)
             {
-                if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
+                toBuild = RobotType.SLANDERER;
+                if (rc.getInfluence() > 3000)
                 {
-                    nearbyMuckrakerBool = false; // FIX LATER
-                    break;
-                }
-            }
-
-            if (nearbyMuckrakerBool)
-            {
-                if (random < 0.6)
-                {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = (int) (0.2 * rc.getInfluence());   
+                    influence = 949;
                 }
                 else
                 {
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 2;
+                    influence = (int) (0.2 * rc.getInfluence());
                 }
+            }
+
+            else if (rc.getRoundNum() < 200)
+            {
+                toBuild = RobotType.POLITICIAN;
+                influence = 100;
             }
 
             else
             {
-                if (random < 0.4)
+                RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
+                boolean nearbyMuckrakerBool = false;
+
+                for (int i = 0; i < nearbyBotsArray.length; i++)
                 {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = (int) (0.2 * rc.getInfluence());
-                }
-                else if (random < 0.6)
-                {
-                    toBuild = RobotType.SLANDERER;
-                    if (rc.getInfluence() > 3000)
+                    if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                     {
-                        influence = 949;
+                        nearbyMuckrakerBool = false; // FIX LATER
+                        break;
+                    }
+                }
+
+                if (nearbyMuckrakerBool)
+                {
+                    if (random < 0.6)
+                    {
+                        toBuild = RobotType.POLITICIAN;
+                        influence = (int) (0.2 * rc.getInfluence());   
                     }
                     else
                     {
-                        influence = (int) (0.2 * rc.getInfluence());
+                        toBuild = RobotType.MUCKRAKER;
+                        influence = 2;
                     }
                 }
+
                 else
                 {
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 2;
+                    if (random < 0.4)
+                    {
+                        toBuild = RobotType.POLITICIAN;
+                        influence = (int) (0.1 * rc.getInfluence());
+                    }
+                    else if (random < 0.6)
+                    {
+                        toBuild = RobotType.SLANDERER;
+                        if (rc.getInfluence() > 3000)
+                        {
+                            influence = 949;
+                        }
+                        else
+                        {
+                            influence = (int) (0.1 * rc.getInfluence());
+                        }
+                    }
+                    else
+                    {
+                        toBuild = RobotType.MUCKRAKER;
+                        influence = 2;
+                    }
                 }
             }
-        }
 
-        if (influence > 400)
-        {
-            influence = 400;
-        }
-
-        for (Direction dir : directions)
-        {
-            if (rc.canBuildRobot(toBuild, dir, influence) && rc.getRoundNum() % 2 == 0)
+            if (influence > 400)
             {
-                rc.buildRobot(toBuild, dir, influence);
-                if (toBuild.equals(RobotType.MUCKRAKER))
+                influence = 400;
+            }
+
+            for (Direction dir : directions)
+            {
+                if (rc.canBuildRobot(toBuild, dir, influence) && rc.getRoundNum() % 2 == 0)
                 {
-                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
-                    for (RobotInfo robot : nearbyRobots)
+                    rc.buildRobot(toBuild, dir, influence);
+                    if (toBuild.equals(RobotType.MUCKRAKER))
                     {
-                        if (robot.location.equals(rc.getLocation().add(dir)))
+                        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                        for (RobotInfo robot : nearbyRobots)
                         {
-                            muckrakersCreatedIDs.add(robot.ID);
-                            break;
+                            if (robot.location.equals(rc.getLocation().add(dir)))
+                            {
+                                muckrakersCreatedIDs.add(robot.ID);
+                                break;
+                            }
                         }
                     }
-                }
 
-                else
-                {
-                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
-                    for (RobotInfo robot : nearbyRobots)
+                    else
                     {
-                        if (robot.location.equals(rc.getLocation().add(dir)))
+                        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                        for (RobotInfo robot : nearbyRobots)
                         {
-                            politiciansAndSlanderersCreatedIDs.add(robot.ID);
-                            break;
+                            if (robot.location.equals(rc.getLocation().add(dir)))
+                            {
+                                politiciansAndSlanderersCreatedIDs.add(robot.ID);
+                                break;
+                            }
                         }
                     }
-                }
 
-                break;
+                    break;
+                }
             }
         }
 
