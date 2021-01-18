@@ -1,7 +1,7 @@
 package MyRobot;
 import battlecode.common.*;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -41,9 +41,9 @@ public strictfp class RobotPlayer {
 
     static int parentID;
 
-    static boolean move = true;
-
     static MapLocation target = null;
+
+    static Direction toMove = null;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -362,7 +362,58 @@ public strictfp class RobotPlayer {
             }
         }
 
-        tryMove(randomDirection());
+        if (target == null && rc.getCooldownTurns() == 0)
+        {
+            if (toMove == null)
+            {
+                toMove = randomDirection();
+            }
+
+            ArrayList<Direction> possibleDirections;
+
+            do
+            {
+                possibleDirections = new ArrayList<Direction>();
+
+                if (rc.canMove(toMove))
+                {
+                    possibleDirections.add(toMove);
+                }
+
+                if (rc.canMove(toMove.rotateLeft()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
+
+                if (rc.canMove(toMove.rotateRight()))
+                {
+                    possibleDirections.add(toMove.rotateLeft());
+                }
+
+                if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
+                {
+                    do 
+                    {
+                        toMove = randomDirection();
+                    } while (!rc.onTheMap(rc.getLocation().add(toMove)));
+                }
+            } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
+
+            Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
+
+            for (Direction dir : possibleDirections)
+            {
+                if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
+                {
+                    actualMove = dir;
+                }
+            }
+
+            if (rc.canMove(actualMove))
+            {
+                rc.move(actualMove);
+            }
+        }
     }
 
     static void runSlanderer() throws GameActionException 
@@ -524,9 +575,54 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (move)
+        if (toMove == null)
         {
-            tryMove(randomDirection());
+            toMove = randomDirection();
+        }
+
+        ArrayList<Direction> possibleDirections;
+
+        do
+        {
+            possibleDirections = new ArrayList<Direction>();
+
+            if (rc.canMove(toMove))
+            {
+                possibleDirections.add(toMove);
+            }
+
+            if (rc.canMove(toMove.rotateLeft()))
+            {
+                possibleDirections.add(toMove.rotateLeft());
+            }
+
+            if (rc.canMove(toMove.rotateRight()))
+            {
+                possibleDirections.add(toMove.rotateLeft());
+            }
+
+            if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
+            {
+                do 
+                {
+                    toMove = randomDirection();
+                } while (!rc.onTheMap(rc.getLocation().add(toMove)));
+            }
+        } while (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)));
+
+        Direction actualMove = possibleDirections.get((int) (Math.random() * possibleDirections.size()));
+
+        for (Direction dir : possibleDirections)
+        {
+            if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canSenseLocation(rc.getLocation().add(actualMove)) && rc.sensePassability(rc.getLocation().add(dir)) > rc.sensePassability(rc.getLocation().add(actualMove)))
+            {
+                actualMove = dir;
+            }
+        }
+
+        if (rc.canMove(actualMove))
+        {
+            rc.move(actualMove);
         }
     }
 
