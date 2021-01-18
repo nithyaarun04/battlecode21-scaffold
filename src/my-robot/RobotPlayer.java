@@ -426,9 +426,10 @@ public strictfp class RobotPlayer {
                     }
                     else
                     {
-                        influence= 949; // Generates 30 influence per round
+                        influence = 949; // Generates 30 influence per round
                     }
                 }
+                
                 else
                 {
                     toBuild = RobotType.MUCKRAKER;
