@@ -163,9 +163,9 @@ public strictfp class RobotPlayer {
 
             for (int i = 0; i < nearbyBotsArray.length; i++)
             {
-                if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER);
+                if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                 {
-                    nearbyMuckrakerBool = true;
+                    nearbyMuckrakerBool = false; // FIX LATER
                     break;
                 }
             }
@@ -186,12 +186,12 @@ public strictfp class RobotPlayer {
 
             else
             {
-                if (random < 0.3)
+                if (random < 0.4)
                 {
                     toBuild = RobotType.POLITICIAN;
                     influence = (int) (0.2 * rc.getInfluence());
                 }
-                else if (random < 0.5)
+                else if (random < 0.6)
                 {
                     toBuild = RobotType.SLANDERER;
                     if (rc.getInfluence() > 3000)
