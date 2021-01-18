@@ -137,23 +137,137 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        if (rc.getRoundNum() < 30)
+        if (rc.getRoundNum() < 200)
         {
-            toBuild = RobotType.SLANDERER;
-            if (rc.getInfluence() > 3000)
+            if (random < 0.4 && rc.getInfluence() >= 42)
             {
-                influence = 949;
+                toBuild = RobotType.SLANDERER;
+                if ((int) (0.5 * rc.getInfluence()) <= 40)
+                {
+                    influence = 21; // Generates 1 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 62)
+                {
+                    influence = 41; // Generates 2 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 84)
+                {
+                    influence = 63; // Generates 3 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 106)
+                {
+                    influence = 85; // Generates 4 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 129)
+                {
+                    influence = 107; // Generates 5 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 153)
+                {
+                    influence = 130; // Generates 6 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 177)
+                {
+                    influence = 154; // Generates 7 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 202)
+                {
+                    influence = 178; // Generates 8 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 227)
+                {
+                    influence = 203; // Generates 9 influence per round
+                }
+                else if ((0.5 * rc.getInfluence()) <= 254)
+                {
+                    influence = 228; // Generates 10 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 281)
+                {
+                    influence = 255; // Generates 11 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 309)
+                {
+                    influence = 282; // Generates 12 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 338)
+                {
+                    influence = 310; // Generates 13 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 367)
+                {
+                    influence = 339; // Generates 14 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 398)
+                {
+                    influence = 368; // Generates 15 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 430)
+                {
+                    influence = 399; // Generates 16 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 462)
+                {
+                    influence = 431; // Generates 17 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 496)
+                {
+                    influence = 463; // Generates 18 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 531)
+                {
+                    influence = 497; // Generates 19 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 567)
+                {
+                    influence = 532; // Generates 20 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 604)
+                {
+                    influence = 568; // Generates 21 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 642)
+                {
+                    influence = 605; // Generates 22 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 682)
+                {
+                    influence = 643; // Generates 23 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 723)
+                {
+                    influence = 683; // Generates 24 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 765)
+                {
+                    influence = 724; // Generates 25 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 809)
+                {
+                    influence = 766; // Generates 26 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 854)
+                {
+                    influence = 810; // Generates 27 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 901)
+                {
+                    influence = 855; // Generates 28 influence per round
+                }
+                else if ((int) (0.5 * rc.getInfluence()) <= 948)
+                {
+                    influence = 902; // Generates 29 influence per round
+                }
+                else
+                {
+                    influence = 949; // Generates 30 influence per round
+                }
             }
             else
             {
-                influence = (int) (0.2 * rc.getInfluence());
+                toBuild = RobotType.POLITICIAN;
+                influence = 100;
             }
-        }
-
-        else if (rc.getRoundNum() < 200)
-        {
-            toBuild = RobotType.POLITICIAN;
-            influence = 100;
         }
 
         else
@@ -165,7 +279,11 @@ public strictfp class RobotPlayer {
             {
                 if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                 {
+<<<<<<< HEAD
                     nearbyMuckrakerBool = false;
+=======
+                    nearbyMuckrakerBool = true; // FIX LATER
+>>>>>>> c7f2a710460ca281848eca3fe6bd5c5d0a5b9a45
                     break;
                 }
             }
@@ -180,7 +298,7 @@ public strictfp class RobotPlayer {
                 else
                 {
                     toBuild = RobotType.MUCKRAKER;
-                    influence = 2;
+                    influence = 1;
                 }
             }
 
@@ -191,22 +309,134 @@ public strictfp class RobotPlayer {
                     toBuild = RobotType.POLITICIAN;
                     influence = (int) (0.2 * rc.getInfluence());
                 }
-                else if (random < 0.6)
+                else if (random < 0.6 && rc.getInfluence() >= 42)
                 {
                     toBuild = RobotType.SLANDERER;
-                    if (rc.getInfluence() > 3000)
+                    if ((int) (0.5 * rc.getInfluence()) <= 40)
                     {
-                        influence = 949;
+                        influence = 21; // Generates 1 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 62)
+                    {
+                        influence = 41; // Generates 2 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 84)
+                    {
+                        influence = 63; // Generates 3 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 106)
+                    {
+                        influence = 85; // Generates 4 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 129)
+                    {
+                        influence = 107; // Generates 5 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 153)
+                    {
+                        influence = 130; // Generates 6 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 177)
+                    {
+                        influence = 154; // Generates 7 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 202)
+                    {
+                        influence = 178; // Generates 8 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 227)
+                    {
+                        influence = 203; // Generates 9 influence per round
+                    }
+                    else if ((0.5 * rc.getInfluence()) <= 254)
+                    {
+                        influence = 228; // Generates 10 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 281)
+                    {
+                        influence = 255; // Generates 11 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 309)
+                    {
+                        influence = 282; // Generates 12 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 338)
+                    {
+                        influence = 310; // Generates 13 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 367)
+                    {
+                        influence = 339; // Generates 14 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 398)
+                    {
+                        influence = 368; // Generates 15 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 430)
+                    {
+                        influence = 399; // Generates 16 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 462)
+                    {
+                        influence = 431; // Generates 17 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 496)
+                    {
+                        influence = 463; // Generates 18 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 531)
+                    {
+                        influence = 497; // Generates 19 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 567)
+                    {
+                        influence = 532; // Generates 20 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 604)
+                    {
+                        influence = 568; // Generates 21 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 642)
+                    {
+                        influence = 605; // Generates 22 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 682)
+                    {
+                        influence = 643; // Generates 23 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 723)
+                    {
+                        influence = 683; // Generates 24 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 765)
+                    {
+                        influence = 724; // Generates 25 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 809)
+                    {
+                        influence = 766; // Generates 26 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 854)
+                    {
+                        influence = 810; // Generates 27 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 901)
+                    {
+                        influence = 855; // Generates 28 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 948)
+                    {
+                        influence = 902; // Generates 29 influence per round
                     }
                     else
                     {
-                        influence = (int) (0.2 * rc.getInfluence());
+                        influence= 949; // Generates 30 influence per round
                     }
                 }
                 else
                 {
                     toBuild = RobotType.MUCKRAKER;
-                    influence = 2;
+                    influence = 1;
                 }
             }
         }
@@ -246,7 +476,6 @@ public strictfp class RobotPlayer {
                         }
                     }
                 }
-
                 break;
             }
         }
@@ -256,7 +485,7 @@ public strictfp class RobotPlayer {
 
         if (rc.getRoundNum() >= 50)
         {
-            // Lost or tied the previous round
+        // Lost or tied the previous round
             if (currentVotes == rc.getTeamVotes())
             {
                 if (percentage+0.025 < 0.8)
@@ -276,7 +505,7 @@ public strictfp class RobotPlayer {
                 lastBidMax = false;
             }
 
-            // Won the previous round
+        // Won the previous round
             else
             {
                 if (percentage-0.005 > 0.002)
@@ -355,6 +584,7 @@ public strictfp class RobotPlayer {
         ///////////////////////////
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
+<<<<<<< HEAD
         
         if ((target == null || !nonFriendlyEnlightenmentCenterLocations.contains(target)) && nonFriendlyEnlightenmentCenterLocations.size() != 0)
         {
@@ -362,6 +592,10 @@ public strictfp class RobotPlayer {
         }
 
         else if (!nonFriendlyEnlightenmentCenterLocations.contains(target))
+=======
+
+        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0 && target == null)
+>>>>>>> c7f2a710460ca281848eca3fe6bd5c5d0a5b9a45
         {
             target = null;
         }
@@ -578,7 +812,7 @@ public strictfp class RobotPlayer {
         {
             if (robot.type.canBeExposed()) 
             {
-                // It's a slanderer... go get them!
+                    // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) 
                 {
                     rc.expose(robot.location);
