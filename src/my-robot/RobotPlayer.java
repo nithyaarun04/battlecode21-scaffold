@@ -165,7 +165,7 @@ public strictfp class RobotPlayer {
             {
                 if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
                 {
-                    nearbyMuckrakerBool = false; // FIX LATER
+                    nearbyMuckrakerBool = false;
                     break;
                 }
             }
@@ -307,6 +307,8 @@ public strictfp class RobotPlayer {
 
     static void runPolitician() throws GameActionException 
     {
+        // CHECKING AND SETTING FLAGS 
+
         int actionRadius = rc.getType().actionRadiusSquared;
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
@@ -350,11 +352,18 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
+        ///////////////////////////
+
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
         
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0 && target == null)
+        if ((target == null || !nonFriendlyEnlightenmentCenterLocations.contains(target)) && nonFriendlyEnlightenmentCenterLocations.size() != 0)
         {
-            MapLocation target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
+            target = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random()*nonFriendlyEnlightenmentCenterLocations.size()));
+        }
+
+        else if (!nonFriendlyEnlightenmentCenterLocations.contains(target))
+        {
+            target = null;
         }
 
         if (target != null)
@@ -373,17 +382,14 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (target == null && rc.getCooldownTurns() == 0)
+        if (target == null && rc.getCooldownTurns() < 1)
         {
-            if (toMove == null)
-            {
-                toMove = randomDirection();
-            }
-
             ArrayList<Direction> possibleDirections;
 
             do
             {
+                toMove = randomDirection();
+
                 possibleDirections = new ArrayList<Direction>();
 
                 if (rc.canMove(toMove))
@@ -401,7 +407,7 @@ public strictfp class RobotPlayer {
                     possibleDirections.add(toMove.rotateLeft());
                 }
 
-                if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)))
+                if (possibleDirections.size() == 0 || !rc.onTheMap(rc.getLocation().add(toMove)) || toMove == null)
                 {
                     do 
                     {
@@ -429,6 +435,8 @@ public strictfp class RobotPlayer {
 
     static void runSlanderer() throws GameActionException 
     {
+        // CHECKING AND SETTING FLAGS 
+
         int actionRadius = rc.getType().actionRadiusSquared;
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
@@ -472,13 +480,7 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
-        {
-            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.location != getLocationFromFlag(rc.getFlag(parentID)))
-            {
-                sendLocation(robot.location);
-            }
-        }
+        ///////////////////////////
 
         Direction[] possibleDirections = new Direction[8];
         int index1 = 0;
@@ -525,6 +527,8 @@ public strictfp class RobotPlayer {
 
     static void runMuckraker() throws GameActionException 
     {
+        // CHECKING AND SETTING FLAGS 
+
         int actionRadius = rc.getType().actionRadiusSquared;
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
@@ -567,6 +571,8 @@ public strictfp class RobotPlayer {
         {
             rc.setFlag(0);
         }
+
+        ///////////////////////////
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, rc.getTeam().opponent())) 
         {
