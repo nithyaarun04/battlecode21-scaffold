@@ -150,13 +150,13 @@ public strictfp class RobotPlayer {
             }
         }
 
-        else if (rc.getRoundNum() < 200 && rc.getInfluence() > 70)
+        else if (rc.getRoundNum() < 200)
         {
             toBuild = RobotType.POLITICIAN;
             influence = 100;
         }
 
-        else if (rc.getInfluence() > 70)
+        else
         {
             RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
             boolean nearbyMuckrakerBool = false;
