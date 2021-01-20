@@ -444,54 +444,57 @@ public strictfp class RobotPlayer {
             }
         }
 
-        int maxBid = 50;
-        boolean lastBidMax = false;
-
-        if (rc.getRoundNum() >= 50)
+        if (rc.getInfluence()>50)
         {
-            if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
+            int maxBid = 50;
+            boolean lastBidMax = false;
+
+            if (rc.getRoundNum() >= 50)
             {
-                if (percentage+0.025 < 0.8)
+                if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
                 {
-                    percentage += 0.025;
+                    if (percentage+0.025 < 0.8)
+                    {
+                        percentage += 0.025;
+                    }
+
+                    else
+                    {
+                        percentage = 0.8;
+                    }
                 }
 
-                else
+                if (currentVotes == rc.getTeamVotes() && lastBidMax)
                 {
-                    percentage = 0.8;
+                    maxBid += 5;
+                    lastBidMax = false;
                 }
-            }
-
-            if (currentVotes == rc.getTeamVotes() && lastBidMax)
-            {
-                maxBid += 5;
-                lastBidMax = false;
-            }
-        
-            else // Won the previous round
-            {
-                if (percentage-0.005 > 0.002)
+            
+                else // Won the previous round
                 {
-                    percentage -= 0.005;
+                    if (percentage-0.005 > 0.002)
+                    {
+                        percentage -= 0.005;
+                    }
+
+                    else
+                    {
+                        percentage = 0.002;
+                    }
                 }
 
-                else
+                currentVotes = rc.getTeamVotes();
+
+                if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)) && (int) Math.ceil(rc.getInfluence()*percentage) < maxBid)
                 {
-                    percentage = 0.002;
+                    rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
                 }
-            }
 
-            currentVotes = rc.getTeamVotes();
-
-            if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)) && (int) Math.ceil(rc.getInfluence()*percentage) < maxBid)
-            {
-                rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
-            }
-
-            else if (rc.canBid(maxBid))
-            {
-                rc.bid(maxBid);
-                lastBidMax = true;
+                else if (rc.canBid(maxBid))
+                {
+                    rc.bid(maxBid);
+                    lastBidMax = true;
+                }
             }
         }
     }
