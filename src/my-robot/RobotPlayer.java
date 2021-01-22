@@ -214,7 +214,6 @@ public strictfp class RobotPlayer {
             else if (Collections.frequency(plants, loc) >= 2 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(loc))
             {
                 enemyEnlightenmentCentersWithoutPlantsLocations.remove(loc);
-                infoToSend.add(locationToSend(loc, 0, 0, 1));
             }
         }
 
@@ -224,6 +223,8 @@ public strictfp class RobotPlayer {
         {
             rc.setFlag(infoToSend.get(0));
             infoToSend.remove(infoToSend.get(0));
+            System.out.println("set parent flag");
+
         }
 
         else
@@ -614,6 +615,8 @@ public strictfp class RobotPlayer {
             int loyalty = getLoyaltyFromFlag(parentID);
             int ecTeam = getECTeamFromFlag(parentID);
 
+            System.out.println("got parent flag");
+
             if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
             {
                 nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
@@ -702,6 +705,8 @@ public strictfp class RobotPlayer {
         if (target != null)
         {
             basicBug(target);
+
+            System.out.println(target);
         }
 
         // MOVING IN A RANDOM DIRECTION UNTIL HIT A WALL
@@ -1001,7 +1006,7 @@ public strictfp class RobotPlayer {
             if (rc.getLocation().distanceSquaredTo(target) < actionRadius && rc.canSetFlag(locationToSend(target, 0, 0, 1)))
             {
                 move = false;
-                rc.setFlag(locationToSend(target, 0, 0, 1));
+                // rc.setFlag(locationToSend(target, 0, 0, 1)); no
             }
 
             if (target != null && move)
@@ -1150,7 +1155,7 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     static int locationToSend(MapLocation location, int loyalty, int ecTeam, int plant) throws GameActionException {
         int x = location.x, y = location.y;
-        int encodedLocation = (ecTeam << (2*NBITS + 2)) + (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
+        int encodedLocation = (plant << (2*NBITS + 2)) + (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
         
         return encodedLocation;
     }
