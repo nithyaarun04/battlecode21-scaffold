@@ -1,4 +1,4 @@
-package MyRobot;
+package MyRobotCopy;
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.Collections;
