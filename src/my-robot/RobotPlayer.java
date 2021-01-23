@@ -248,7 +248,7 @@ public strictfp class RobotPlayer {
         {
             if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
             {
-                nearbyMuckraker = true;
+                nearbyMuckraker = false;
                 break;
             }
         }
@@ -389,10 +389,17 @@ public strictfp class RobotPlayer {
                     influence = 949; // Generates 30 influence per round
                 }
             }
-            else
+
+            else if (random >= 0.4 && rc.getInfluence() > 150)
             {
                 toBuild = RobotType.POLITICIAN;
                 influence = 100;
+            }
+
+            else
+            {
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
             }
         }
 
