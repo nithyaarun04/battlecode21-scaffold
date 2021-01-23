@@ -55,10 +55,6 @@ public strictfp class RobotPlayer {
 
     static boolean move = true;
 
-    static boolean isPlant = false;
-
-    static final int plantInfluence = 10;
-
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -75,14 +71,6 @@ public strictfp class RobotPlayer {
                     parentID = robot.ID;
                     break;
                 }
-            }
-        }
-
-        if (rc.getType().equals(RobotType.MUCKRAKER))
-        {            
-            if (rc.getInfluence() == plantInfluence)
-            {
-                isPlant = true;
             }
         }
 
@@ -123,33 +111,7 @@ public strictfp class RobotPlayer {
         {
             if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
             {
-                MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
-                int loyalty = getLoyaltyFromFlag(rc.getFlag(ID));
-                int ecTeam = getECTeamFromFlag(rc.getFlag(ID));
-
-                if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                else if (loyalty == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                if (loyalty == 1 && enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    enemyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                else if (loyalty == 0 && !enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && ecTeam == 0)
-                {
-                    enemyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
+                infoToSend.add(rc.getFlag(ID));
             }
         }
 
@@ -157,65 +119,7 @@ public strictfp class RobotPlayer {
         {
             if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
             {
-                MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
-                int loyalty = getLoyaltyFromFlag(rc.getFlag(ID));
-                int ecTeam = getECTeamFromFlag(rc.getFlag(ID));
-
-                if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                else if (loyalty == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                if (loyalty == 1 && enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-                {
-                    enemyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-
-                else if (loyalty == 0 && !enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && ecTeam == 0)
-                {
-                    enemyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-                    infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
-                }
-            }
-        }
-
-        // CHECKING FOR PLANTS
-
-        ArrayList<MapLocation> plants = new ArrayList<MapLocation>();
-
-        for (int ID : muckrakersCreatedIDs)
-        {
-            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
-            {
-                MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
-                int isPlant = getPlantFromFlag(rc.getFlag(ID));
-
-                if (isPlant == 1)
-                {
-                    plants.add(enlightenmentCenterLocation);
-                }
-            }
-        }
-
-        for (MapLocation loc : enemyEnlightenmentCenterLocations)
-        {
-            if (Collections.frequency(plants, loc) < 2 && !enemyEnlightenmentCentersWithoutPlantsLocations.contains(loc))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.add(loc);
-                infoToSend.add(locationToSend(loc, 0, 0, 0));
-            }
-
-            else if (Collections.frequency(plants, loc) >= 2 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(loc))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(loc);
+                infoToSend.add(rc.getFlag(ID));
             }
         }
 
@@ -643,39 +547,12 @@ public strictfp class RobotPlayer {
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
         {
-            MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
-            int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
-            int ecTeam = getECTeamFromFlag(rc.getFlag(parentID));
-            int plant = getPlantFromFlag(rc.getFlag(parentID));
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
 
-            if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            if (!nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
             {
                 nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (loyalty == 1 && enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && ecTeam == 0)
-            {
-                enemyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 1 && !enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
+                System.out.println(enlightenmentCenterLocation);
             }
         }
 
@@ -683,30 +560,10 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
         {
-            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location) && rc.canSetFlag(locationToSend(robot.location)))
             {
-                if (robot.team == rc.getTeam().opponent() && rc.canSetFlag(locationToSend(robot.location, 0, 0)))
-                {
-                    rc.setFlag(locationToSend(robot.location, 0, 0));
-                }
-
-                else
-                {
-                    if (rc.canSetFlag(locationToSend(robot.location, 0, 1)))
-                    {
-                        rc.setFlag(locationToSend(robot.location, 0, 1));
-                    }
-                }
-
-                setFlag = true;
-            }
-        }
-
-        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-        {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
-            {
-                rc.setFlag(locationToSend(loc, 1, 0));
+                rc.setFlag(locationToSend(robot.location));
+                // System.out.println(locationToSend(robot.location));
                 setFlag = true;
             }
         }
@@ -718,7 +575,7 @@ public strictfp class RobotPlayer {
 
         // GIVING SPEECHES
 
-        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
 
         for (RobotInfo a : nearbyRobots)
         {
@@ -825,39 +682,11 @@ public strictfp class RobotPlayer {
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
         {
-            MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
-            int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
-            int ecTeam = getECTeamFromFlag(rc.getFlag(parentID));
-            int plant = getPlantFromFlag(rc.getFlag(parentID));
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
 
-            if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            if (!nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
             {
                 nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (loyalty == 1 && enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && ecTeam == 0)
-            {
-                enemyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 1 && !enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
             }
         }
 
@@ -865,30 +694,9 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
         {
-            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location) && rc.canSetFlag(locationToSend(robot.location)))
             {
-                if (robot.team == rc.getTeam().opponent() && rc.canSetFlag(locationToSend(robot.location, 0, 0)))
-                {
-                    rc.setFlag(locationToSend(robot.location, 0, 0));
-                }
-
-                else
-                {
-                    if (rc.canSetFlag(locationToSend(robot.location, 0, 1)))
-                    {
-                        rc.setFlag(locationToSend(robot.location, 0, 1));
-                    }
-                }
-
-                setFlag = true;
-            }
-        }
-
-        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-        {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
-            {
-                rc.setFlag(locationToSend(loc, 1, 0));
+                rc.setFlag(locationToSend(robot.location));
                 setFlag = true;
             }
         }
@@ -951,39 +759,11 @@ public strictfp class RobotPlayer {
 
         if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
         {
-            MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
-            int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
-            int ecTeam = getECTeamFromFlag(rc.getFlag(parentID));
-            int plant = getPlantFromFlag(rc.getFlag(parentID));
+            MapLocation enlightenmentCenterLocation = getLocationFromFlag(parentID);
 
-            if (loyalty == 1 && nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                nonFriendlyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
+            if (!nonFriendlyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
             {
                 nonFriendlyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (loyalty == 1 && enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCenterLocations.remove(enlightenmentCenterLocation);
-            }
-
-            else if (loyalty == 0 && !enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && ecTeam == 0)
-            {
-                enemyEnlightenmentCenterLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 1 && !enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.add(enlightenmentCenterLocation);
-            }
-
-            if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
-            {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
             }
         }
 
@@ -991,30 +771,9 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
         {
-            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
+            if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location) && rc.canSetFlag(locationToSend(robot.location)))
             {
-                if (robot.team == rc.getTeam().opponent() && rc.canSetFlag(locationToSend(robot.location, 0, 0)))
-                {
-                    rc.setFlag(locationToSend(robot.location, 0, 0));
-                }
-
-                else
-                {
-                    if (rc.canSetFlag(locationToSend(robot.location, 0, 1)))
-                    {
-                        rc.setFlag(locationToSend(robot.location, 0, 1));
-                    }
-                }
-
-                setFlag = true;
-            }
-        }
-
-        for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
-        {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
-            {
-                rc.setFlag(locationToSend(loc, 1, 0));
+                rc.setFlag(locationToSend(robot.location));
                 setFlag = true;
             }
         }
@@ -1036,34 +795,6 @@ public strictfp class RobotPlayer {
                     rc.expose(robot.location);
                     return;
                 }
-            }
-        }
-
-        // MOVING TOWARDS TARGET
-
-        if (isPlant)
-        {
-            System.out.println("I'm a plant");
-
-            if ((target == null || !enemyEnlightenmentCentersWithoutPlantsLocations.contains(target)) && enemyEnlightenmentCentersWithoutPlantsLocations.size() != 0)
-            {
-                target = enemyEnlightenmentCentersWithoutPlantsLocations.get((int) (Math.random()*enemyEnlightenmentCentersWithoutPlantsLocations.size()));
-            }
-
-            else if (!enemyEnlightenmentCentersWithoutPlantsLocations.contains(target))
-            {
-                target = null;
-            }
-
-            if (rc.getLocation().distanceSquaredTo(target) < actionRadius && rc.canSetFlag(locationToSend(target, 0, 0, 1)))
-            {
-                move = false;
-                // rc.setFlag(locationToSend(target, 0, 0, 1)); no
-            }
-
-            if (target != null && move)
-            {
-                basicBug(target);
             }
         }
 
@@ -1166,19 +897,19 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    static RobotInfo getRobotAtLocation(MapLocation loc) throws GameActionException
+    static RobotInfo getRobotAtLocation(MapLocation location) throws GameActionException
     {
-        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1);
+        int actionRadius = rc.getType().actionRadiusSquared;
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius);
         
         for (RobotInfo robot : nearbyRobots)
         {
-            if (robot.getLocation().equals(loc))
+            if (robot.location.equals(location))
             {
                 return robot;
             }
         }
 
-        System.out.println(loc);
         // Location is out of sensing range or there is no robot at that location
         throw new GameActionException(GameActionExceptionType.CANT_SENSE_THAT, "Location out of sensing range or location is unoccupied");
     }
