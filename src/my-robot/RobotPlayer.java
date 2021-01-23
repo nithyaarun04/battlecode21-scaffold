@@ -31,6 +31,8 @@ public strictfp class RobotPlayer {
 
     static double percentage = (Math.random()*(31)+5) / 100.0;
 
+    static int maxBid = 50;
+
     static int currentVotes = 0;
 
     static ArrayList<Integer> muckrakersCreatedIDs = new ArrayList<Integer>();
@@ -241,9 +243,30 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
+        RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
+        boolean nearbyMuckraker = false;
+
+        for (int i = 0; i < nearbyBotsArray.length; i++)
+        {
+            if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
+            {
+                nearbyMuckraker = true;
+                break;
+            }
+        }
+
         if (rc.getRoundNum() < 200)
         {
-            if (random < 0.4 && rc.getInfluence() >= 42)
+            if (nearbyMuckraker)
+            {
+                if (random > -1)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = 40;
+                }
+            }
+
+            else if (random < 0.4 && rc.getInfluence() >= 42)
             {
                 toBuild = RobotType.SLANDERER;
                 if ((int) (0.5 * rc.getInfluence()) <= 40)
@@ -376,13 +399,27 @@ public strictfp class RobotPlayer {
 
         else
         {
-            if (random < 0.2)
+            if (nearbyMuckraker)
+            {
+                if (random < 0.3)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = (int) (0.2 * rc.getInfluence());
+                }
+                else
+                {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                }
+            }
+
+            else if (random < 0.3)
             {
                 toBuild = RobotType.POLITICIAN;
                 influence = (int) (0.2 * rc.getInfluence());
             }
 
-            if (random < 0.45 && rc.getInfluence() >= 42)
+            else if (random < 0.5 && rc.getInfluence() >= 42)
             {
                 toBuild = RobotType.SLANDERER;
                 if ((int) (0.5 * rc.getInfluence()) <= 40)
@@ -548,57 +585,54 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (rc.getInfluence()>50)
+        boolean didMaxBid = false;
+
+        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 752)
         {
-            int maxBid = 50;
-            boolean lastBidMax = false;
-
-            if (rc.getRoundNum() >= 50)
+            if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
             {
-                if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
+                if (percentage+0.025 < 0.8)
                 {
-                    if (percentage+0.025 < 0.8)
-                    {
-                        percentage += 0.025;
-                    }
-
-                    else
-                    {
-                        percentage = 0.8;
-                    }
+                    percentage += 0.025;
                 }
 
-                if (currentVotes == rc.getTeamVotes() && lastBidMax)
+                else
                 {
-                    maxBid += 5;
-                    lastBidMax = false;
+                    percentage = 0.8;
                 }
-            
-                else // Won the previous round
+            }
+        
+            else // Won the previous round
+            {
+                if (percentage-0.005 > 0.002)
                 {
-                    if (percentage-0.005 > 0.002)
-                    {
-                        percentage -= 0.005;
-                    }
-
-                    else
-                    {
-                        percentage = 0.002;
-                    }
+                    percentage -= 0.005;
                 }
 
-                currentVotes = rc.getTeamVotes();
-
-                if (rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)) && (int) Math.ceil(rc.getInfluence()*percentage) < maxBid)
+                else
                 {
-                    rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
+                    percentage = 0.002;
                 }
+            }
 
-                else if (rc.canBid(maxBid))
+            currentVotes = rc.getTeamVotes();
+
+            if ((int) Math.ceil(rc.getInfluence()*percentage) < maxBid && rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
+            {
+                rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
+            }
+            else
+            {
+                if (rc.canBid(maxBid))
                 {
                     rc.bid(maxBid);
-                    lastBidMax = true;
+                    didMaxBid = true;
                 }
+            }
+
+            if (didMaxBid)
+            {
+                maxBid += 5;
             }
         }
     }
