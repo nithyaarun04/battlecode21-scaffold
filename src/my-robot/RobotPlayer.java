@@ -720,13 +720,30 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        for (RobotInfo a : nearbyRobots)
+        if (rc.getRoundNum() > 1200)
         {
-            if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
+            for (RobotInfo a : nearbyRobots)
             {
-                if (rc.canEmpower(actionRadius))
+                if ((a.type.equals(RobotType.POLITICIAN) || a.type.equals(RobotType.SLANDERER) || a.type.equals(RobotType.MUCKRAKER)) && a.getTeam() != rc.getTeam())
                 {
-                    rc.empower(actionRadius);
+                    if (rc.canEmpower(actionRadius))
+                    {
+                        rc.empower(actionRadius);
+                    }
+                }
+            }
+        }
+
+        else
+        {
+            for (RobotInfo a : nearbyRobots)
+            {
+                if (a.type.equals(RobotType.ENLIGHTENMENT_CENTER) && a.getTeam() != rc.getTeam())
+                {
+                    if (rc.canEmpower(actionRadius))
+                    {
+                        rc.empower(actionRadius);
+                    }
                 }
             }
         }
