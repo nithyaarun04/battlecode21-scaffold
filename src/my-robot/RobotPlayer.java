@@ -282,11 +282,11 @@ public strictfp class RobotPlayer {
         RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
         boolean nearbyMuckraker = false;
 
-        for (int i = 0; i < nearbyBotsArray.length; i++)
+        for (RobotInfo a : nearbyBotsArray)
         {
-            if (nearbyBotsArray[i].getType() == RobotType.MUCKRAKER && nearbyBotsArray[i].getTeam() != rc.getTeam());
+            if (a.type.equals(RobotType.MUCKRAKER) && a.getTeam() != rc.getTeam());
             {
-                nearbyMuckraker = false;
+                nearbyMuckraker = false; // FIX LATER
                 break;
             }
         }
@@ -295,12 +295,8 @@ public strictfp class RobotPlayer {
         {
             if (nearbyMuckraker)
             {
-                if (random > -1)
-                {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = 40;
-                }
-                //nearbyMuckraker = false;
+                toBuild = RobotType.POLITICIAN;
+                influence = 40;
             }
 
             else if (random < 0.4 && rc.getInfluence() >= 42)
@@ -463,7 +459,6 @@ public strictfp class RobotPlayer {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
                 }
-                //nearbyMuckraker = false;
             }
 
             else if (random < 0.3)
@@ -783,11 +778,11 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 1200)
+        if (rc.getRoundNum() > 500)
         {
             for (RobotInfo a : nearbyRobots)
             {
-                if ((a.type.equals(RobotType.POLITICIAN) || a.type.equals(RobotType.SLANDERER) || a.type.equals(RobotType.MUCKRAKER)) && a.getTeam() != rc.getTeam())
+                if (a.getTeam() != rc.getTeam())
                 {
                     if (rc.canEmpower(actionRadius))
                     {
