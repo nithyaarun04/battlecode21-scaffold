@@ -251,6 +251,20 @@ public strictfp class RobotPlayer {
             infoToSend.remove(infoToSend.get(0));
         }
 
+        else if (nonFriendlyEnlightenmentCenterLocations.size() > 0)
+        {
+            MapLocation enlightenmentCenterLocation = nonFriendlyEnlightenmentCenterLocations.get((int) (Math.random() * nonFriendlyEnlightenmentCenterLocations.size()));
+            if (enemyEnlightenmentCenterLocations.contains(enlightenmentCenterLocation) && rc.canSetFlag(locationToSend(enlightenmentCenterLocation, 0, 0, 0)))
+            {
+                rc.setFlag(locationToSend(enlightenmentCenterLocation, 0, 0, 0));
+            }
+
+            else if (rc.canSetFlag(locationToSend(enlightenmentCenterLocation, 0, 1, 0)))
+            {
+                rc.setFlag(locationToSend(enlightenmentCenterLocation, 0, 1, 0));
+            }
+        }
+
         else
         {
             if (rc.canSetFlag(0))
