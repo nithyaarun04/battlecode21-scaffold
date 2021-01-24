@@ -119,6 +119,8 @@ public strictfp class RobotPlayer {
     {
         // CHECKING FLAGS
 
+        ArrayList<Integer> idsToRemove = new ArrayList<Integer>();
+
         for (int ID : muckrakersCreatedIDs)
         {
             if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
@@ -151,7 +153,19 @@ public strictfp class RobotPlayer {
                     infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
                 }
             }
+
+            else if (!rc.canGetFlag(ID))
+            {
+                idsToRemove.add(ID);
+            }
         }
+
+        for (int ID : idsToRemove)
+        {
+            muckrakersCreatedIDs.remove(new Integer(ID));
+        }
+
+        idsToRemove = new ArrayList<Integer>();
 
         for (int ID : politiciansAndSlanderersCreatedIDs)
         {
@@ -185,6 +199,16 @@ public strictfp class RobotPlayer {
                     infoToSend.add(locationToSend(enlightenmentCenterLocation, loyalty, ecTeam));
                 }
             }
+
+            else if (!rc.canGetFlag(ID))
+            {
+                idsToRemove.add(ID);
+            }
+        }
+
+        for (int ID : idsToRemove)
+        {
+            politiciansAndSlanderersCreatedIDs.remove(new Integer(ID));
         }
 
         // CHECKING FOR PLANTS
@@ -210,7 +234,7 @@ public strictfp class RobotPlayer {
             if (Collections.frequency(plants, loc) < 2 && !enemyEnlightenmentCentersWithoutPlantsLocations.contains(loc))
             {
                 enemyEnlightenmentCentersWithoutPlantsLocations.add(loc);
-                infoToSend.add(locationToSend(loc, 0, 0, 0));
+                infoToSend.add(locationToSend(loc, 0, 0, 1));
             }
 
             else if (Collections.frequency(plants, loc) >= 2 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(loc))
@@ -395,7 +419,15 @@ public strictfp class RobotPlayer {
             else
             {
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                {
+                    influence = plantInfluence;
+                }
+
+                else
+                {
+                    influence = 1;
+                }
             }
         }
 
@@ -549,7 +581,15 @@ public strictfp class RobotPlayer {
             else
             {
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                {
+                    influence = plantInfluence;
+                }
+
+                else
+                {
+                    influence = 1;
+                }
             }
         }
 
@@ -679,13 +719,13 @@ public strictfp class RobotPlayer {
 
             if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
             {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
+                // enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
             }
         }
 
         boolean setFlag = false;
 
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared))
         {
             if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
             {
@@ -767,8 +807,6 @@ public strictfp class RobotPlayer {
         if (target != null)
         {
             basicBug(target);
-
-            System.out.println(target);
         }
 
         // MOVING IN A RANDOM DIRECTION UNTIL HIT A WALL
@@ -878,13 +916,13 @@ public strictfp class RobotPlayer {
 
             if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
             {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
+                // enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
             }
         }
 
         boolean setFlag = false;
 
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared))
         {
             if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
             {
@@ -1004,13 +1042,13 @@ public strictfp class RobotPlayer {
 
             if (plant == 0 && enemyEnlightenmentCentersWithoutPlantsLocations.contains(enlightenmentCenterLocation))
             {
-                enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
+                // enemyEnlightenmentCentersWithoutPlantsLocations.remove(enlightenmentCenterLocation);
             }
         }
 
         boolean setFlag = false;
 
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius))
+        for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared))
         {
             if (robot.type.equals(RobotType.ENLIGHTENMENT_CENTER) && robot.team != rc.getTeam() && !nonFriendlyEnlightenmentCenterLocations.contains(robot.location))
             {
@@ -1064,8 +1102,6 @@ public strictfp class RobotPlayer {
 
         if (isPlant)
         {
-            System.out.println("I'm a plant");
-
             if ((target == null || !enemyEnlightenmentCentersWithoutPlantsLocations.contains(target)) && enemyEnlightenmentCentersWithoutPlantsLocations.size() != 0)
             {
                 target = enemyEnlightenmentCentersWithoutPlantsLocations.get((int) (Math.random()*enemyEnlightenmentCentersWithoutPlantsLocations.size()));
@@ -1076,10 +1112,10 @@ public strictfp class RobotPlayer {
                 target = null;
             }
 
-            if (rc.getLocation().distanceSquaredTo(target) < actionRadius && rc.canSetFlag(locationToSend(target, 0, 0, 1)))
+            if (target != null && rc.getLocation().distanceSquaredTo(target) < actionRadius && rc.canSetFlag(locationToSend(target, 0, 0, 1)))
             {
                 move = false;
-                // rc.setFlag(locationToSend(target, 0, 0, 1)); no
+                rc.setFlag(locationToSend(target, 0, 0, 1));
             }
 
             if (target != null && move)
