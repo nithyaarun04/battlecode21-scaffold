@@ -2,6 +2,7 @@ package MyRobot;
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Arrays;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -284,9 +285,9 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo a : nearbyBotsArray)
         {
-            if (a.type.equals(RobotType.MUCKRAKER) && a.getTeam() != rc.getTeam());
+            if (a.getType() == RobotType.MUCKRAKER && a.getTeam() == rc.getTeam().opponent())
             {
-                nearbyMuckraker = false; // FIX LATER
+                nearbyMuckraker = true;
                 break;
             }
         }
