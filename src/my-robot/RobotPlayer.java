@@ -34,6 +34,8 @@ public strictfp class RobotPlayer {
 
     static int maxBid = 50;
 
+    static boolean bidLastRound = true;
+
     static int currentVotes = 0;
 
     static ArrayList<Integer> muckrakersCreatedIDs = new ArrayList<Integer>();
@@ -644,9 +646,15 @@ public strictfp class RobotPlayer {
 
         boolean didMaxBid = false;
 
-        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 752)
+        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
         {
-            if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
+            if (bidLastRound = false)
+            {
+                percentage = percentage;
+                bidLastRound = true;
+            }
+
+            else if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
             {
                 if (percentage+0.025 < 0.8)
                 {
@@ -691,6 +699,11 @@ public strictfp class RobotPlayer {
             {
                 maxBid += 5;
             }
+        }
+
+        else
+        {
+            bidLastRound = false;
         }
     }
 
