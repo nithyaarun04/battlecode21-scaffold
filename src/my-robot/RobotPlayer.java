@@ -901,6 +901,11 @@ public strictfp class RobotPlayer {
             {
                 rc.move(actualMove);
             }
+
+            else
+            {
+                
+            }
         }
     }
 
