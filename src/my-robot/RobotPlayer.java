@@ -901,6 +901,11 @@ public strictfp class RobotPlayer {
             {
                 rc.move(actualMove);
             }
+
+            else
+            {
+                tryMove(randomDirection());
+            }
         }
     }
 
@@ -985,48 +990,103 @@ public strictfp class RobotPlayer {
             rc.setFlag(0);
         }
 
-        // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
+        // MOVING
 
-        Direction[] possibleDirections = new Direction[8];
-        int index1 = 0;
+        RobotInfo[] nearbyEnemyBots = rc.senseNearbyRobots(20);
+        MapLocation muckrakerLocation = rc.getLocation();
+        boolean nearbyMuckraker = false;
 
-        for (Direction dir : directions)
+        for (RobotInfo a : nearbyEnemyBots)
         {
-            if (rc.canMove(dir))
+            if (a.getType() == RobotType.MUCKRAKER && a.getTeam() == rc.getTeam().opponent())
             {
-                possibleDirections[index1] = dir;
-                index1++;
-            }
-        }
-
-        Direction[] possiblePassableDirections = new Direction[8];
-        int index2 = 0;
-
-        for (Direction dir : possibleDirections)
-        {
-            if (dir != null)
-            {
-                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
-                {
-                    possiblePassableDirections[index2] = dir;
-                    index2++;
-                }
-            }
-
-            else
-            {
+                muckrakerLocation = a.getLocation();
+                nearbyMuckraker = true;
                 break;
             }
         }
 
-        if (possiblePassableDirections[0] != null)
+        // RUNNING AWAY FROM MUCKRAKERS
+        if (nearbyMuckraker)
         {
-            rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
+            if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTH)
+            {
+                tryMove(Direction.SOUTH);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTHEAST)
+            {
+                tryMove(Direction.SOUTHWEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.EAST)
+            {
+                tryMove(Direction.WEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTHEAST)
+            {
+                tryMove(Direction.NORTHWEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTH)
+            {
+                tryMove(Direction.NORTH);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTHWEST)
+            {
+                tryMove(Direction.NORTHEAST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.WEST)
+            {
+                tryMove(Direction.EAST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTHWEST)
+            {
+                tryMove(Direction.SOUTHEAST);
+            }
         }
 
-        else if (possibleDirections[0] != null)
+        // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
+        else
         {
-            rc.move(possibleDirections[(int) (Math.random()*index1)]);
+            Direction[] possibleDirections = new Direction[8];
+            int index1 = 0;
+
+            for (Direction dir : directions)
+            {
+                if (rc.canMove(dir))
+                {
+                    possibleDirections[index1] = dir;
+                    index1++;
+                }
+            }
+
+            Direction[] possiblePassableDirections = new Direction[8];
+            int index2 = 0;
+
+            for (Direction dir : possibleDirections)
+            {
+                if (dir != null)
+                {
+                    if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
+                    {
+                        possiblePassableDirections[index2] = dir;
+                        index2++;
+                    }
+                }
+
+                else
+                {
+                    break;
+                }
+            }
+
+            if (possiblePassableDirections[0] != null)
+            {
+                rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
+            }
+
+            else if (possibleDirections[0] != null)
+            {
+                rc.move(possibleDirections[(int) (Math.random()*index1)]);
+            }
         }
     }
 
@@ -1215,6 +1275,11 @@ public strictfp class RobotPlayer {
             if (rc.canMove(actualMove))
             {
                 rc.move(actualMove);
+            }
+
+            else
+            {
+                tryMove(randomDirection());
             }
         }
     }
