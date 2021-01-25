@@ -357,7 +357,7 @@ public strictfp class RobotPlayer {
 
         // replace guards
 
-        if (!rc.isLocationOccupied(rc.getLocation().add(guardDir1)))
+        if (rc.getRoundNum() > 200 && !rc.isLocationOccupied(rc.getLocation().add(guardDir1)))
         {
             toBuild = RobotType.POLITICIAN;
             if (0.2 * rc.getInfluence() > guardInfluence)
@@ -385,7 +385,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        else if (!rc.isLocationOccupied(rc.getLocation().add(guardDir2)))
+        else if (rc.getRoundNum() > 200 && !rc.isLocationOccupied(rc.getLocation().add(guardDir2)))
         {
             toBuild = RobotType.POLITICIAN;
             if (0.2 * rc.getInfluence() > guardInfluence)
