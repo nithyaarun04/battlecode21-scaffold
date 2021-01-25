@@ -928,7 +928,7 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 500 || isGuard)
+        if (rc.getRoundNum() > 500)
         {
             for (RobotInfo a : nearbyRobots)
             {
@@ -938,6 +938,27 @@ public strictfp class RobotPlayer {
                     {
                         rc.empower(actionRadius);
                     }
+                }
+            }
+        }
+
+        if (isGuard)
+        {
+            int numEnemies = 0;
+
+            for (RobotInfo a : nearbyRobots)
+            {
+                if (a.getTeam() != rc.getTeam())
+                {
+                    numEnemies++;
+                }
+            }
+
+            if (numEnemies >= 3)
+            {
+                if (rc.canEmpower(actionRadius))
+                {
+                    rc.empower(actionRadius);
                 }
             }
         }
