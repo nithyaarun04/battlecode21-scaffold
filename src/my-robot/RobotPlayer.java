@@ -58,7 +58,17 @@ public strictfp class RobotPlayer {
 
     static boolean isPlant = false;
 
+    static boolean isGuard = false;
+
     static final int plantInfluence = 10;
+
+    static final int guardInfluence = 70;
+
+    static Direction guardDir1;
+
+    static Direction guardDir2;
+
+    static ArrayList<Direction> nonGuardDirections = new ArrayList<>(Arrays.asList(directions));
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -85,6 +95,70 @@ public strictfp class RobotPlayer {
             {
                 isPlant = true;
             }
+        }
+
+        if (rc.getType().equals(RobotType.ENLIGHTENMENT_CENTER))
+        {
+            ArrayList<Direction> possibleGuardDirections = new ArrayList<Direction>();
+
+            if (rc.onTheMap(rc.getLocation().add(Direction.NORTH)))
+            {
+                possibleGuardDirections.add(Direction.NORTH);
+            }
+
+            if (rc.onTheMap(rc.getLocation().add(Direction.EAST)))
+            {
+                possibleGuardDirections.add(Direction.EAST);
+            }
+
+            if (rc.onTheMap(rc.getLocation().add(Direction.SOUTH)))
+            {
+                possibleGuardDirections.add(Direction.SOUTH);
+            }
+
+            if (rc.onTheMap(rc.getLocation().add(Direction.WEST)))
+            {
+                possibleGuardDirections.add(Direction.WEST);
+            }
+
+            if (possibleGuardDirections.contains(Direction.NORTH) && possibleGuardDirections.contains(Direction.SOUTH))
+            {
+                guardDir1 = Direction.NORTH;
+                guardDir2 = Direction.SOUTH;
+            }
+
+            else if (possibleGuardDirections.contains(Direction.EAST) && possibleGuardDirections.contains(Direction.WEST))
+            {
+                guardDir1 = Direction.EAST;
+                guardDir2 = Direction.WEST;
+            }
+
+            else
+            {
+                guardDir1 = possibleGuardDirections.get(0);
+                guardDir2 = possibleGuardDirections.get(1);
+            }
+
+            if (rc.canSetFlag(guardDirsInFlagToSend(guardDir1, guardDir2, rc.getFlag(rc.getID()))))
+            {
+                rc.setFlag(guardDirsInFlagToSend(guardDir1, guardDir2, rc.getFlag(rc.getID())));
+            }
+
+            nonGuardDirections.remove(guardDir1);
+            nonGuardDirections.remove(guardDir2);
+        }
+
+        if (!rc.getType().equals(RobotType.ENLIGHTENMENT_CENTER) && rc.canGetFlag(parentID))
+        {
+            guardDir1 = getGuardDir1FromFlag(rc.getFlag(parentID));
+            guardDir2 = getGuardDir2FromFlag(rc.getFlag(parentID));
+        }
+
+        if (rc.getType().equals(RobotType.POLITICIAN) && ((rc.isLocationOccupied(rc.getLocation().subtract(guardDir1)) && getRobotAtLocation(rc.getLocation().subtract(guardDir1), rc).getID() == parentID) || (rc.isLocationOccupied(rc.getLocation().subtract(guardDir2)) && getRobotAtLocation(rc.getLocation().subtract(guardDir2), rc).getID() == parentID)))
+        {
+            isGuard = true;
+            move = false;
+            System.out.println("ewf");
         }
 
         // This is the RobotController object. You use it to perform actions from this robot,
@@ -124,7 +198,7 @@ public strictfp class RobotPlayer {
 
         for (int ID : muckrakersCreatedIDs)
         {
-            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
+            if (rc.canGetFlag(ID) && !isFlagNeutral(rc.getFlag(ID)))
             {
                 MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
                 int loyalty = getLoyaltyFromFlag(rc.getFlag(ID));
@@ -170,7 +244,7 @@ public strictfp class RobotPlayer {
 
         for (int ID : politiciansAndSlanderersCreatedIDs)
         {
-            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
+            if (rc.canGetFlag(ID) && !isFlagNeutral(rc.getFlag(ID)))
             {
                 MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
                 int loyalty = getLoyaltyFromFlag(rc.getFlag(ID));
@@ -218,7 +292,7 @@ public strictfp class RobotPlayer {
 
         for (int ID : muckrakersCreatedIDs)
         {
-            if (rc.canGetFlag(ID) && rc.getFlag(ID) != 0)
+            if (rc.canGetFlag(ID) && !isFlagNeutral(rc.getFlag(ID)))
             {
                 MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(ID));
                 int isPlant = getPlantFromFlag(rc.getFlag(ID));
@@ -268,9 +342,9 @@ public strictfp class RobotPlayer {
 
         else
         {
-            if (rc.canSetFlag(0))
+            if (rc.canSetFlag(neutralFlagToSend(rc.getFlag(rc.getID()))))
             {
-                rc.setFlag(0);
+                rc.setFlag(neutralFlagToSend(rc.getFlag(rc.getID())));
             }
         }
 
@@ -280,367 +354,416 @@ public strictfp class RobotPlayer {
         RobotType toBuild = null;
         int influence = 0;
 
-        RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
-        boolean nearbyMuckraker = false;
+        // replace guards
 
-        for (RobotInfo a : nearbyBotsArray)
+        if (!rc.isLocationOccupied(rc.getLocation().add(guardDir1)))
         {
-            if (a.getType() == RobotType.MUCKRAKER && a.getTeam() == rc.getTeam().opponent())
+            toBuild = RobotType.POLITICIAN;
+            influence = guardInfluence;
+
+            if (rc.canBuildRobot(toBuild, guardDir1, influence))
             {
-                nearbyMuckraker = true;
-                break;
+                rc.buildRobot(toBuild, guardDir1, influence);
+
+                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                for (RobotInfo robot : nearbyRobots)
+                {
+                    if (robot.location.equals(rc.getLocation().add(guardDir1)))
+                    {
+                        politiciansAndSlanderersCreatedIDs.add(robot.ID);
+                        break;
+                    }
+                }
             }
         }
 
-        if (rc.getRoundNum() < 200)
+        else if (!rc.isLocationOccupied(rc.getLocation().add(guardDir2)))
         {
-            if (nearbyMuckraker)
-            {
-                toBuild = RobotType.POLITICIAN;
-                influence = 40;
-            }
+            toBuild = RobotType.POLITICIAN;
+            influence = guardInfluence;
 
-            else if (random < 0.4 && rc.getInfluence() >= 42)
+            if (rc.canBuildRobot(toBuild, guardDir2, influence))
             {
-                toBuild = RobotType.SLANDERER;
-                if ((int) (0.5 * rc.getInfluence()) <= 40)
-                {
-                    influence = 21; // Generates 1 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 62)
-                {
-                    influence = 41; // Generates 2 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 84)
-                {
-                    influence = 63; // Generates 3 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 106)
-                {
-                    influence = 85; // Generates 4 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 129)
-                {
-                    influence = 107; // Generates 5 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 153)
-                {
-                    influence = 130; // Generates 6 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 177)
-                {
-                    influence = 154; // Generates 7 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 202)
-                {
-                    influence = 178; // Generates 8 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 227)
-                {
-                    influence = 203; // Generates 9 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 254)
-                {
-                    influence = 228; // Generates 10 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 281)
-                {
-                    influence = 255; // Generates 11 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 309)
-                {
-                    influence = 282; // Generates 12 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 338)
-                {
-                    influence = 310; // Generates 13 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 367)
-                {
-                    influence = 339; // Generates 14 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 398)
-                {
-                    influence = 368; // Generates 15 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 430)
-                {
-                    influence = 399; // Generates 16 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 462)
-                {
-                    influence = 431; // Generates 17 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 496)
-                {
-                    influence = 463; // Generates 18 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 531)
-                {
-                    influence = 497; // Generates 19 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 567)
-                {
-                    influence = 532; // Generates 20 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 604)
-                {
-                    influence = 568; // Generates 21 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 642)
-                {
-                    influence = 605; // Generates 22 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 682)
-                {
-                    influence = 643; // Generates 23 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 723)
-                {
-                    influence = 683; // Generates 24 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 765)
-                {
-                    influence = 724; // Generates 25 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 809)
-                {
-                    influence = 766; // Generates 26 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 854)
-                {
-                    influence = 810; // Generates 27 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 901)
-                {
-                    influence = 855; // Generates 28 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 948)
-                {
-                    influence = 902; // Generates 29 influence per round
-                }
-                else
-                {
-                    influence = 949; // Generates 30 influence per round
-                }
-            }
+                rc.buildRobot(toBuild, guardDir2, influence);
 
-            else if (random >= 0.4 && rc.getInfluence() > 150)
-            {
-                toBuild = RobotType.POLITICIAN;
-                influence = 100;
-            }
-
-            else
-            {
-                toBuild = RobotType.MUCKRAKER;
-                if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                for (RobotInfo robot : nearbyRobots)
                 {
-                    influence = plantInfluence;
-                }
-
-                else
-                {
-                    influence = 1;
+                    if (robot.location.equals(rc.getLocation().add(guardDir2)))
+                    {
+                        politiciansAndSlanderersCreatedIDs.add(robot.ID);
+                        break;
+                    }
                 }
             }
         }
 
         else
         {
-            if (nearbyMuckraker)
+            RobotInfo[] nearbyBotsArray = rc.senseNearbyRobots(15);
+            boolean nearbyMuckraker = false;
+
+            for (RobotInfo a : nearbyBotsArray)
             {
-                if (random < 0.5)
+                if (a.getType() == RobotType.MUCKRAKER && a.getTeam() == rc.getTeam().opponent())
+                {
+                    nearbyMuckraker = true;
+                    break;
+                }
+            }
+
+            if (rc.getRoundNum() < 200)
+            {
+                if (nearbyMuckraker)
                 {
                     toBuild = RobotType.POLITICIAN;
-                    influence = (int) (0.2 * rc.getInfluence());
+                    influence = 40;
                 }
+
+                else if (random < 0.4 && rc.getInfluence() >= 42)
+                {
+                    toBuild = RobotType.SLANDERER;
+                    if ((int) (0.5 * rc.getInfluence()) <= 40)
+                    {
+                        influence = 21; // Generates 1 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 62)
+                    {
+                        influence = 41; // Generates 2 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 84)
+                    {
+                        influence = 63; // Generates 3 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 106)
+                    {
+                        influence = 85; // Generates 4 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 129)
+                    {
+                        influence = 107; // Generates 5 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 153)
+                    {
+                        influence = 130; // Generates 6 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 177)
+                    {
+                        influence = 154; // Generates 7 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 202)
+                    {
+                        influence = 178; // Generates 8 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 227)
+                    {
+                        influence = 203; // Generates 9 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 254)
+                    {
+                        influence = 228; // Generates 10 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 281)
+                    {
+                        influence = 255; // Generates 11 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 309)
+                    {
+                        influence = 282; // Generates 12 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 338)
+                    {
+                        influence = 310; // Generates 13 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 367)
+                    {
+                        influence = 339; // Generates 14 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 398)
+                    {
+                        influence = 368; // Generates 15 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 430)
+                    {
+                        influence = 399; // Generates 16 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 462)
+                    {
+                        influence = 431; // Generates 17 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 496)
+                    {
+                        influence = 463; // Generates 18 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 531)
+                    {
+                        influence = 497; // Generates 19 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 567)
+                    {
+                        influence = 532; // Generates 20 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 604)
+                    {
+                        influence = 568; // Generates 21 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 642)
+                    {
+                        influence = 605; // Generates 22 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 682)
+                    {
+                        influence = 643; // Generates 23 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 723)
+                    {
+                        influence = 683; // Generates 24 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 765)
+                    {
+                        influence = 724; // Generates 25 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 809)
+                    {
+                        influence = 766; // Generates 26 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 854)
+                    {
+                        influence = 810; // Generates 27 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 901)
+                    {
+                        influence = 855; // Generates 28 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 948)
+                    {
+                        influence = 902; // Generates 29 influence per round
+                    }
+                    else
+                    {
+                        influence = 949; // Generates 30 influence per round
+                    }
+                }
+
+                else if (random >= 0.4 && rc.getInfluence() > 150)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = 100;
+                }
+
                 else
                 {
                     toBuild = RobotType.MUCKRAKER;
-                    influence = 1;
-                }
-            }
+                    if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                    {
+                        influence = plantInfluence;
+                    }
 
-            else if (random < 0.3)
-            {
-                toBuild = RobotType.POLITICIAN;
-                influence = (int) (0.2 * rc.getInfluence());
-            }
-
-            else if (random < 0.5 && rc.getInfluence() >= 42)
-            {
-                toBuild = RobotType.SLANDERER;
-                if ((int) (0.5 * rc.getInfluence()) <= 40)
-                {
-                    influence = 21; // Generates 1 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 62)
-                {
-                    influence = 41; // Generates 2 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 84)
-                {
-                    influence = 63; // Generates 3 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 106)
-                {
-                    influence = 85; // Generates 4 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 129)
-                {
-                    influence = 107; // Generates 5 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 153)
-                {
-                    influence = 130; // Generates 6 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 177)
-                {
-                    influence = 154; // Generates 7 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 202)
-                {
-                    influence = 178; // Generates 8 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 227)
-                {
-                    influence = 203; // Generates 9 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 254)
-                {
-                    influence = 228; // Generates 10 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 281)
-                {
-                    influence = 255; // Generates 11 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 309)
-                {
-                    influence = 282; // Generates 12 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 338)
-                {
-                    influence = 310; // Generates 13 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 367)
-                {
-                    influence = 339; // Generates 14 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 398)
-                {
-                    influence = 368; // Generates 15 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 430)
-                {
-                    influence = 399; // Generates 16 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 462)
-                {
-                    influence = 431; // Generates 17 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 496)
-                {
-                    influence = 463; // Generates 18 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 531)
-                {
-                    influence = 497; // Generates 19 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 567)
-                {
-                    influence = 532; // Generates 20 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 604)
-                {
-                    influence = 568; // Generates 21 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 642)
-                {
-                    influence = 605; // Generates 22 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 682)
-                {
-                    influence = 643; // Generates 23 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 723)
-                {
-                    influence = 683; // Generates 24 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 765)
-                {
-                    influence = 724; // Generates 25 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 809)
-                {
-                    influence = 766; // Generates 26 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 854)
-                {
-                    influence = 810; // Generates 27 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 901)
-                {
-                    influence = 855; // Generates 28 influence per round
-                }
-                else if ((int) (0.5 * rc.getInfluence()) <= 948)
-                {
-                    influence = 902; // Generates 29 influence per round
-                }
-                else
-                {
-                    influence= 949; // Generates 30 influence per round
+                    else
+                    {
+                        influence = 1;
+                    }
                 }
             }
 
             else
             {
-                toBuild = RobotType.MUCKRAKER;
-                if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                if (nearbyMuckraker)
                 {
-                    influence = plantInfluence;
+                    if (random < 0.5)
+                    {
+                        toBuild = RobotType.POLITICIAN;
+                        influence = (int) (0.2 * rc.getInfluence());
+                    }
+                    else
+                    {
+                        toBuild = RobotType.MUCKRAKER;
+                        influence = 1;
+                    }
+                }
+
+                else if (random < 0.3)
+                {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = (int) (0.2 * rc.getInfluence());
+                }
+
+                else if (random < 0.5 && rc.getInfluence() >= 42)
+                {
+                    toBuild = RobotType.SLANDERER;
+                    if ((int) (0.5 * rc.getInfluence()) <= 40)
+                    {
+                        influence = 21; // Generates 1 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 62)
+                    {
+                        influence = 41; // Generates 2 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 84)
+                    {
+                        influence = 63; // Generates 3 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 106)
+                    {
+                        influence = 85; // Generates 4 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 129)
+                    {
+                        influence = 107; // Generates 5 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 153)
+                    {
+                        influence = 130; // Generates 6 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 177)
+                    {
+                        influence = 154; // Generates 7 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 202)
+                    {
+                        influence = 178; // Generates 8 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 227)
+                    {
+                        influence = 203; // Generates 9 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 254)
+                    {
+                        influence = 228; // Generates 10 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 281)
+                    {
+                        influence = 255; // Generates 11 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 309)
+                    {
+                        influence = 282; // Generates 12 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 338)
+                    {
+                        influence = 310; // Generates 13 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 367)
+                    {
+                        influence = 339; // Generates 14 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 398)
+                    {
+                        influence = 368; // Generates 15 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 430)
+                    {
+                        influence = 399; // Generates 16 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 462)
+                    {
+                        influence = 431; // Generates 17 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 496)
+                    {
+                        influence = 463; // Generates 18 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 531)
+                    {
+                        influence = 497; // Generates 19 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 567)
+                    {
+                        influence = 532; // Generates 20 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 604)
+                    {
+                        influence = 568; // Generates 21 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 642)
+                    {
+                        influence = 605; // Generates 22 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 682)
+                    {
+                        influence = 643; // Generates 23 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 723)
+                    {
+                        influence = 683; // Generates 24 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 765)
+                    {
+                        influence = 724; // Generates 25 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 809)
+                    {
+                        influence = 766; // Generates 26 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 854)
+                    {
+                        influence = 810; // Generates 27 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 901)
+                    {
+                        influence = 855; // Generates 28 influence per round
+                    }
+                    else if ((int) (0.5 * rc.getInfluence()) <= 948)
+                    {
+                        influence = 902; // Generates 29 influence per round
+                    }
+                    else
+                    {
+                        influence= 949; // Generates 30 influence per round
+                    }
                 }
 
                 else
                 {
-                    influence = 1;
+                    toBuild = RobotType.MUCKRAKER;
+                    if (enemyEnlightenmentCentersWithoutPlantsLocations.size() > 0)
+                    {
+                        influence = plantInfluence;
+                    }
+
+                    else
+                    {
+                        influence = 1;
+                    }
                 }
             }
-        }
 
-        for (Direction dir : directions)
-        {
-            if (rc.canBuildRobot(toBuild, dir, influence))
+            for (Direction dir : nonGuardDirections)
             {
-                rc.buildRobot(toBuild, dir, influence);
-                if (toBuild.equals(RobotType.MUCKRAKER))
+                if (rc.canBuildRobot(toBuild, dir, influence))
                 {
-                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
-                    for (RobotInfo robot : nearbyRobots)
+                    rc.buildRobot(toBuild, dir, influence);
+                    if (toBuild.equals(RobotType.MUCKRAKER))
                     {
-                        if (robot.location.equals(rc.getLocation().add(dir)))
+                        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                        for (RobotInfo robot : nearbyRobots)
                         {
-                            muckrakersCreatedIDs.add(robot.ID);
-                            break;
+                            if (robot.location.equals(rc.getLocation().add(dir)))
+                            {
+                                muckrakersCreatedIDs.add(robot.ID);
+                                break;
+                            }
                         }
                     }
-                }
 
-                else
-                {
-                    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
-                    for (RobotInfo robot : nearbyRobots)
+                    else
                     {
-                        if (robot.location.equals(rc.getLocation().add(dir)))
+                        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(2,rc.getTeam());
+                        for (RobotInfo robot : nearbyRobots)
                         {
-                            politiciansAndSlanderersCreatedIDs.add(robot.ID);
-                            break;
+                            if (robot.location.equals(rc.getLocation().add(dir)))
+                            {
+                                politiciansAndSlanderersCreatedIDs.add(robot.ID);
+                                break;
+                            }
                         }
                     }
+                    break;
                 }
-                break;
             }
         }
+
+        // BIDDING
 
         boolean didMaxBid = false;
 
@@ -700,7 +823,7 @@ public strictfp class RobotPlayer {
 
         int actionRadius = rc.getType().actionRadiusSquared;
 
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        if (rc.canGetFlag(parentID) && !isFlagNeutral(rc.getFlag(parentID)))
         {
             MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
             int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
@@ -763,23 +886,23 @@ public strictfp class RobotPlayer {
 
         for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
         {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc, rc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
             {
                 rc.setFlag(locationToSend(loc, 1, 0));
                 setFlag = true;
             }
         }
 
-        if (!setFlag && rc.canSetFlag(0))
+        if (!setFlag && rc.canSetFlag(neutralFlagToSend(rc.getFlag(rc.getID()))))
         {
-            rc.setFlag(0);
+            rc.setFlag(neutralFlagToSend(rc.getFlag(rc.getID())));
         }
 
         // GIVING SPEECHES
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 500)
+        if (rc.getRoundNum() > 500 || isGuard)
         {
             for (RobotInfo a : nearbyRobots)
             {
@@ -809,7 +932,7 @@ public strictfp class RobotPlayer {
 
         // MOVING TOWARDS TARGET
         
-        if ((target == null || !enemyEnlightenmentCentersWithoutPlantsLocations.contains(target)) && enemyEnlightenmentCentersWithoutPlantsLocations.size() != 0)
+        if (move && (target == null || !enemyEnlightenmentCentersWithoutPlantsLocations.contains(target)) && enemyEnlightenmentCentersWithoutPlantsLocations.size() != 0)
         {
             target = enemyEnlightenmentCentersWithoutPlantsLocations.get((int) (Math.random()*enemyEnlightenmentCentersWithoutPlantsLocations.size()));
         }
@@ -897,7 +1020,7 @@ public strictfp class RobotPlayer {
 
         int actionRadius = rc.getType().actionRadiusSquared;
 
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        if (rc.canGetFlag(parentID) && !isFlagNeutral(rc.getFlag(parentID)))
         {
             MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
             int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
@@ -960,16 +1083,16 @@ public strictfp class RobotPlayer {
 
         for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
         {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc, rc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
             {
                 rc.setFlag(locationToSend(loc, 1, 0));
                 setFlag = true;
             }
         }
 
-        if (!setFlag && rc.canSetFlag(0))
+        if (!setFlag && rc.canSetFlag(neutralFlagToSend(rc.getFlag(rc.getID()))))
         {
-            rc.setFlag(0);
+            rc.setFlag(neutralFlagToSend(rc.getFlag(rc.getID())));
         }
 
         // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
@@ -1023,7 +1146,7 @@ public strictfp class RobotPlayer {
 
         int actionRadius = rc.getType().actionRadiusSquared;
 
-        if (rc.canGetFlag(parentID) && rc.getFlag(parentID) != 0)
+        if (rc.canGetFlag(parentID) && !isFlagNeutral(rc.getFlag(parentID)))
         {
             MapLocation enlightenmentCenterLocation = getLocationFromFlag(rc.getFlag(parentID));
             int loyalty = getLoyaltyFromFlag(rc.getFlag(parentID));
@@ -1086,16 +1209,16 @@ public strictfp class RobotPlayer {
 
         for (MapLocation loc : nonFriendlyEnlightenmentCenterLocations)
         {
-            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
+            if (rc.canSenseLocation(loc) && getRobotAtLocation(loc, rc).getTeam() == rc.getTeam() && rc.canSetFlag(locationToSend(loc, 1, 0)))
             {
                 rc.setFlag(locationToSend(loc, 1, 0));
                 setFlag = true;
             }
         }
 
-        if (!setFlag && rc.canSetFlag(0))
+        if (!setFlag && rc.canSetFlag(neutralFlagToSend(rc.getFlag(rc.getID()))))
         {
-            rc.setFlag(0);
+            rc.setFlag(neutralFlagToSend(rc.getFlag(rc.getID())));
         }
 
         // EXPOSING ENEMY SLANDERERS
@@ -1238,9 +1361,9 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    static RobotInfo getRobotAtLocation(MapLocation loc) throws GameActionException
+    static RobotInfo getRobotAtLocation(MapLocation loc, RobotController robotc) throws GameActionException
     {
-        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1);
+        RobotInfo[] nearbyRobots = robotc.senseNearbyRobots(-1);
         
         for (RobotInfo robot : nearbyRobots)
         {
@@ -1250,7 +1373,6 @@ public strictfp class RobotPlayer {
             }
         }
 
-        System.out.println(loc);
         // Location is out of sensing range or there is no robot at that location
         throw new GameActionException(GameActionExceptionType.CANT_SENSE_THAT, "Location out of sensing range or location is unoccupied");
     }
@@ -1263,7 +1385,8 @@ public strictfp class RobotPlayer {
 
     static int locationToSend(MapLocation location) throws GameActionException {
         int x = location.x, y = location.y;
-        int encodedLocation = ((x & BITMASK) << NBITS) + (y & BITMASK);
+        int guardDirs = rc.getFlag(rc.getID()) >> 17;
+        int encodedLocation = (guardDirs << 17) + ((x & BITMASK) << NBITS) + (y & BITMASK);
         
         return encodedLocation;
     }
@@ -1271,20 +1394,81 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     static int locationToSend(MapLocation location, int loyalty, int ecTeam) throws GameActionException {
         int x = location.x, y = location.y;
-        int encodedLocation = (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
+        int guardDirs = rc.getFlag(rc.getID()) >> 17;
+        int encodedLocation = (guardDirs << 17) + (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
         
         return encodedLocation;
     }
 
     @SuppressWarnings("unused")
-    static int locationToSend(MapLocation location, int loyalty, int ecTeam, int plant) throws GameActionException {
+    static int locationToSend(MapLocation location, int loyalty, int ecTeam, int plant) throws GameActionException 
+    {
         int x = location.x, y = location.y;
-        int encodedLocation = (plant << (2*NBITS + 2)) + (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
+        int guardDirs = rc.getFlag(rc.getID()) >> 17;
+        int encodedLocation = (guardDirs << 17) + (plant << (2*NBITS + 2)) + (ecTeam << (2*NBITS + 1)) + (loyalty << (2*NBITS)) + ((x & BITMASK) << NBITS) + (y & BITMASK);
         
         return encodedLocation;
     }
 
-    static MapLocation getLocationFromFlag(int flag) {
+    static int neutralFlagToSend(int flag)
+    {
+        int guardDirs = flag >> 17;
+        return guardDirs << 17;
+    }
+
+    static int guardDirsInFlagToSend(Direction dir1, Direction dir2, int flag) throws GameActionException
+    {
+        int currentFlag = flag - (flag >> 17 << 17);
+
+        int guard1;
+
+        if (dir1 == Direction.NORTH)
+        {
+            guard1 = 0;
+        }
+
+        else if (dir1 == Direction.EAST)
+        {
+            guard1 = 1;
+        }
+
+        else if (dir1 == Direction.SOUTH)
+        {
+            guard1 = 2;
+        }
+
+        else
+        {
+            guard1 = 3;
+        }
+
+        int guard2;
+
+        if (dir2 == Direction.NORTH)
+        {
+            guard2 = 0;
+        }
+
+        else if (dir2 == Direction.EAST)
+        {
+            guard2 = 1;
+        }
+
+        else if (dir2 == Direction.SOUTH)
+        {
+            guard2 = 2;
+        }
+
+        else
+        {
+            guard2 = 3;
+        }
+
+        return (guard2 << 19) + (guard1 << 17) + currentFlag;
+    }
+
+    static MapLocation getLocationFromFlag(int flag) 
+    {
         int y = flag & BITMASK;
         int x = (flag >> NBITS) & BITMASK;
         // int extraInformation = flag >> (2*NBITS);
@@ -1330,6 +1514,66 @@ public strictfp class RobotPlayer {
     {
         // 0 if EC is not plant and 1 if EC is plant
         return (flag >> 16) & 1;
+    }
+
+    static Direction getGuardDir1FromFlag(int flag)
+    {
+        int guard1 = (flag >> 17) - (flag >> 19 << 2);
+
+        if (guard1 == 0)
+        {
+            return Direction.NORTH;
+        }
+
+        else if (guard1 == 1)
+        {
+            return Direction.EAST;
+        }
+
+        else if (guard1 == 2)
+        {
+            return Direction.SOUTH;
+        }
+
+        else
+        {
+            return Direction.WEST;
+        }
+    }
+
+    static Direction getGuardDir2FromFlag(int flag)
+    {
+        int guard2 = (flag >> 19) - (flag >> 21 << 2);
+
+        if (guard2 == 0)
+        {
+            return Direction.NORTH;
+        }
+
+        else if (guard2 == 1)
+        {
+            return Direction.EAST;
+        }
+
+        else if (guard2 == 2)
+        {
+            return Direction.SOUTH;
+        }
+
+        else
+        {
+            return Direction.WEST;
+        }
+    }
+
+    static boolean isFlagNeutral(int flag)
+    {
+        if (flag - (flag >> 17 << 17) == 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     ////////////////////////////////////////////////////////////////////////////
