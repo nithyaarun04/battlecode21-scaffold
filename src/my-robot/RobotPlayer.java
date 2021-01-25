@@ -34,6 +34,8 @@ public strictfp class RobotPlayer {
 
     static int maxBid = 50;
 
+    static boolean bidLastRound = true;
+
     static int currentVotes = 0;
 
     static ArrayList<Integer> muckrakersCreatedIDs = new ArrayList<Integer>();
@@ -767,9 +769,15 @@ public strictfp class RobotPlayer {
 
         boolean didMaxBid = false;
 
-        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 752)
+        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
         {
-            if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
+            if (bidLastRound = false)
+            {
+                percentage = percentage;
+                bidLastRound = true;
+            }
+
+            else if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
             {
                 if (percentage+0.025 < 0.8)
                 {
@@ -814,6 +822,11 @@ public strictfp class RobotPlayer {
             {
                 maxBid += 5;
             }
+        }
+
+        else
+        {
+            bidLastRound = false;
         }
     }
 
@@ -1011,6 +1024,11 @@ public strictfp class RobotPlayer {
             {
                 rc.move(actualMove);
             }
+
+            else
+            {
+                tryMove(randomDirection());
+            }
         }
     }
 
@@ -1095,48 +1113,103 @@ public strictfp class RobotPlayer {
             rc.setFlag(neutralFlagToSend(rc.getFlag(rc.getID())));
         }
 
-        // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
+        // MOVING
 
-        Direction[] possibleDirections = new Direction[8];
-        int index1 = 0;
+        RobotInfo[] nearbyEnemyBots = rc.senseNearbyRobots(20);
+        MapLocation muckrakerLocation = rc.getLocation();
+        boolean nearbyMuckraker = false;
 
-        for (Direction dir : directions)
+        for (RobotInfo a : nearbyEnemyBots)
         {
-            if (rc.canMove(dir))
+            if (a.getType() == RobotType.MUCKRAKER && a.getTeam() == rc.getTeam().opponent())
             {
-                possibleDirections[index1] = dir;
-                index1++;
-            }
-        }
-
-        Direction[] possiblePassableDirections = new Direction[8];
-        int index2 = 0;
-
-        for (Direction dir : possibleDirections)
-        {
-            if (dir != null)
-            {
-                if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
-                {
-                    possiblePassableDirections[index2] = dir;
-                    index2++;
-                }
-            }
-
-            else
-            {
+                muckrakerLocation = a.getLocation();
+                nearbyMuckraker = true;
                 break;
             }
         }
 
-        if (possiblePassableDirections[0] != null)
+        // RUNNING AWAY FROM MUCKRAKERS
+        if (nearbyMuckraker)
         {
-            rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
+            if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTH)
+            {
+                tryMove(Direction.SOUTH);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTHEAST)
+            {
+                tryMove(Direction.SOUTHWEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.EAST)
+            {
+                tryMove(Direction.WEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTHEAST)
+            {
+                tryMove(Direction.NORTHWEST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTH)
+            {
+                tryMove(Direction.NORTH);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.SOUTHWEST)
+            {
+                tryMove(Direction.NORTHEAST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.WEST)
+            {
+                tryMove(Direction.EAST);
+            }
+            else if (rc.getLocation().directionTo(muckrakerLocation) == Direction.NORTHWEST)
+            {
+                tryMove(Direction.SOUTHEAST);
+            }
         }
 
-        else if (possibleDirections[0] != null)
+        // MOVING IN THE DIRECTION WITH GREATEST PASSABILITY
+        else
         {
-            rc.move(possibleDirections[(int) (Math.random()*index1)]);
+            Direction[] possibleDirections = new Direction[8];
+            int index1 = 0;
+
+            for (Direction dir : directions)
+            {
+                if (rc.canMove(dir))
+                {
+                    possibleDirections[index1] = dir;
+                    index1++;
+                }
+            }
+
+            Direction[] possiblePassableDirections = new Direction[8];
+            int index2 = 0;
+
+            for (Direction dir : possibleDirections)
+            {
+                if (dir != null)
+                {
+                    if (rc.sensePassability(rc.getLocation().add(dir)) >= passabilityBound)
+                    {
+                        possiblePassableDirections[index2] = dir;
+                        index2++;
+                    }
+                }
+
+                else
+                {
+                    break;
+                }
+            }
+
+            if (possiblePassableDirections[0] != null)
+            {
+                rc.move(possiblePassableDirections[(int) (Math.random()*index2)]);
+            }
+
+            else if (possibleDirections[0] != null)
+            {
+                rc.move(possibleDirections[(int) (Math.random()*index1)]);
+            }
         }
     }
 
@@ -1325,6 +1398,11 @@ public strictfp class RobotPlayer {
             if (rc.canMove(actualMove))
             {
                 rc.move(actualMove);
+            }
+
+            else
+            {
+                tryMove(randomDirection());
             }
         }
     }
