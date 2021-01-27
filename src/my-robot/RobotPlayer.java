@@ -60,7 +60,7 @@ public strictfp class RobotPlayer {
 
     static boolean bidLastRound = true;
 
-    static final int plantInfluence = 10;
+    static final int plantInfluence = 2;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -452,10 +452,10 @@ public strictfp class RobotPlayer {
         {
             if (nearbyMuckraker)
             {
-                if (random < 0.5)
+                if (random < 0.8)
                 {
                     toBuild = RobotType.POLITICIAN;
-                    influence = (int) (0.2 * rc.getInfluence());
+                    influence = 40;
                 }
                 else
                 {
@@ -766,7 +766,7 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 500)
+        if (rc.getRoundNum() > 300)
         {
             for (RobotInfo a : nearbyRobots)
             {
