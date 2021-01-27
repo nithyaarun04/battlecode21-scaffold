@@ -928,7 +928,7 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 500)
+        if (rc.getRoundNum() > 200)
         {
             for (RobotInfo a : nearbyRobots)
             {
