@@ -1,4 +1,4 @@
-package MyRobot;
+package MyRobotQuals;
 import battlecode.common.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,7 @@ public strictfp class RobotPlayer {
 
     static Direction bugDirection = null;
 
-    static int bid = 5;
+    static double percentage = (Math.random()*(31)+5) / 100.0;
 
     static int maxBid = 50;
 
@@ -646,32 +646,60 @@ public strictfp class RobotPlayer {
 
         // BIDDING
 
-        if (rc.getInfluence() > 50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
+        boolean didMaxBid = false;
+
+        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
         {
-            if (currentVotes == rc.getTeamVotes() && bidLastRound) // Lost or tied the previous round
+            if (bidLastRound = false)
             {
-                bid += 4;
+                percentage = percentage;
+                bidLastRound = true;
+            }
+
+            else if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
+            {
+                if (percentage+0.025 < 0.8)
+                {
+                    percentage += 0.025;
+                }
+
+                else
+                {
+                    percentage = 0.8;
+                }
             }
         
-            else if (currentVotes != rc.getTeamVotes() && bidLastRound) // Won the previous round
+            else // Won the previous round
             {
-                if (bid > 1)
+                if (percentage-0.005 > 0.002)
                 {
-                    bid -= 1;
+                    percentage -= 0.005;
+                }
+
+                else
+                {
+                    percentage = 0.002;
                 }
             }
 
             currentVotes = rc.getTeamVotes();
 
-            if (rc.canBid(bid))
+            if ((int) Math.ceil(rc.getInfluence()*percentage) < maxBid && rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
             {
-                rc.bid(bid);
-                bidLastRound = true;
+                rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
             }
-
             else
             {
-                bidLastRound = false;
+                if (rc.canBid(maxBid))
+                {
+                    rc.bid(maxBid);
+                    didMaxBid = true;
+                }
+            }
+
+            if (didMaxBid)
+            {
+                maxBid += 5;
             }
         }
 
