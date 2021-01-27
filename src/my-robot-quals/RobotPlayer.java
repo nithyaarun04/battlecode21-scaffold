@@ -30,7 +30,7 @@ public strictfp class RobotPlayer {
 
     static Direction bugDirection = null;
 
-    static double percentage = (Math.random()*(31)+5) / 100.0;
+    static int bid = 5;
 
     static int maxBid = 50;
 
@@ -646,60 +646,32 @@ public strictfp class RobotPlayer {
 
         // BIDDING
 
-        boolean didMaxBid = false;
-
-        if (rc.getInfluence()>50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
+        if (rc.getInfluence() > 50 && rc.getRoundNum() >= 100 && rc.getTeamVotes() < 751)
         {
-            if (bidLastRound = false)
+            if (currentVotes == rc.getTeamVotes() && bidLastRound) // Lost or tied the previous round
             {
-                percentage = percentage;
-                bidLastRound = true;
-            }
-
-            else if (currentVotes == rc.getTeamVotes()) // Lost or tied the previous round
-            {
-                if (percentage+0.025 < 0.8)
-                {
-                    percentage += 0.025;
-                }
-
-                else
-                {
-                    percentage = 0.8;
-                }
+                bid += 4;
             }
         
-            else // Won the previous round
+            else if (currentVotes != rc.getTeamVotes() && bidLastRound) // Won the previous round
             {
-                if (percentage-0.005 > 0.002)
+                if (bid > 1)
                 {
-                    percentage -= 0.005;
-                }
-
-                else
-                {
-                    percentage = 0.002;
+                    bid -= 1;
                 }
             }
 
             currentVotes = rc.getTeamVotes();
 
-            if ((int) Math.ceil(rc.getInfluence()*percentage) < maxBid && rc.canBid((int) Math.ceil(rc.getInfluence()*percentage)))
+            if (rc.canBid(bid))
             {
-                rc.bid((int) Math.ceil(rc.getInfluence()*percentage));
-            }
-            else
-            {
-                if (rc.canBid(maxBid))
-                {
-                    rc.bid(maxBid);
-                    didMaxBid = true;
-                }
+                rc.bid(bid);
+                bidLastRound = true;
             }
 
-            if (didMaxBid)
+            else
             {
-                maxBid += 5;
+                bidLastRound = false;
             }
         }
 
