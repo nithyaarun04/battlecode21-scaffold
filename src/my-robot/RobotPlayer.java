@@ -452,7 +452,7 @@ public strictfp class RobotPlayer {
         {
             if (nearbyMuckraker)
             {
-                if (random < 0.8)
+                if (random < 0.7)
                 {
                     toBuild = RobotType.POLITICIAN;
                     influence = 40;
@@ -766,7 +766,7 @@ public strictfp class RobotPlayer {
 
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots(actionRadius-1);
 
-        if (rc.getRoundNum() > 300)
+        if (rc.getRoundNum() > 400)
         {
             for (RobotInfo a : nearbyRobots)
             {
